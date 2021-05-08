@@ -10,7 +10,7 @@
 !./meshDemon/*
 !./数学小工具/*
 !./MATLAB基础/*
-!./myTest/*
+!/myTest/*
 
 
 #忽略子目录下的所有文件
