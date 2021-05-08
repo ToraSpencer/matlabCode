@@ -7,9 +7,9 @@
 #指定不忽略的文件
 !*.m
 !*.gitignore
-!./meshDemon/*
-!./数学小工具/*
-!./MATLAB基础/*
+!/meshDemon/*
+!/数学小工具/*
+!/MATLAB基础/*
 !/myTest/*
 
 
