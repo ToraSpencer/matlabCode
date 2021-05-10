@@ -49,6 +49,9 @@ crown_ax_zline = getDirLine(crown_ax.z, crown_center);
 OBJwriteVertices('标准牙x轴.obj', crown_ax_xline);
 OBJwriteVertices('标准牙y轴.obj', crown_ax_yline);
 OBJwriteVertices('标准牙z轴.obj', crown_ax_zline);
+crown_ax_dirs = [crown_ax.x; crown_ax.y; crown_ax.z];
+OBJwriteVertices('标准牙牙轴方向向量.obj', crown_ax_dirs);
+
 
 
 
@@ -66,17 +69,20 @@ if s ==1 || s ==2
         gumline =  ReadObj(namestr2);                       % 牙龈线点云
         axis = ReadObj('AXISUpper_.obj');
         axi = axis( (3*(toothIdx-1) + 1) : 3*toothIdx, :);       % 当前牙齿的三个牙轴方向向量
-      
+        OBJwriteVertices('病人牙轴方向向量.obj', axi);
+        OBJwriteVertices('病人牙龈线.obj', gumline);
         %       1.2 处理
         bingren_center = mean(bingren.vertex);     % 病人牙冠网格中心
-        gumline_y = max(gumline(:,2));             % 牙龈线点云中y坐标最大值
-        p_bingren =[bingren_center(1), gumline_y(1), bingren_center(3)];
+        ymax = max(gumline(:,2));             % 牙龈线点云中y坐标最大值
+        p_bingren =[bingren_center(1), ymax, bingren_center(3)];
         toothYdir = axi(2,:);                    % 当前病人牙齿的y轴方向
         bingren_vers = bingren.vertex;
-        index_bingren = find(bingren_vers(:,2)<=(p_bingren(2) - (toothYdir(1)*(bingren_vers(:,1) ...
-            - p_bingren(1))+toothYdir(3)*(bingren_vers(:,3) - p_bingren(3)))/toothYdir(2))-2);    % 超参数为2
+        index_bingren = find(bingren_vers(:,2) <= (p_bingren(2) - (toothYdir(1)*(bingren_vers(:,1) ...
+                - p_bingren(1)) + toothYdir(3)*(bingren_vers(:,3) - p_bingren(3)))/toothYdir(2))-2);    % 超参数为2
         point_bingren = bingren_vers(index_bingren,:);      % 牙齿自身坐标系下，只保留y方向上高于p_bingren点2mm的点。
- 
+        
+        disp(size(index_bingren));      % for debug
+        
         
        %% FOR DEBUG
         figure(1);
@@ -122,9 +128,8 @@ if s ==1 || s ==2
         
        %%  for debug
         OBJwriteVertices('point_crown.obj', point_crown);
-        %%
-        
-        
+       %%
+       
         % 标准牙根
         rootVers = root.vertices;
         root_center = mean(rootVers);
@@ -165,7 +170,7 @@ if s ==1 || s ==2
          OBJwriteVertices('point1.obj', point1);
          OBJwriteVertices('point2.obj', point2);
         
-        %%
+       %%
         %       2.2 确定变形参数
         for i = 1:length(point2)
            [minValue,r]=mindis(point1,point2(i,:),1);
