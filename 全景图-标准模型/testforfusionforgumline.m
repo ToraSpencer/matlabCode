@@ -1,6 +1,7 @@
 clc
 clear all
-functionname='testforfusion.m'; functiondir=which(functionname);
+functionname='testforfusion.m'; 
+functiondir=which(functionname);
 functiondir=functiondir(1:end-length(functionname));
 addpath([functiondir 'trianglerayintersection'])
 addpath([functiondir 'toothmodel'])

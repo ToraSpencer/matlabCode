@@ -53,7 +53,7 @@ while ~isempty(lone_edges_list)
         
         % Fill boundary
         if ~isempty(nxt_vtx_idx)
-            boundary = cat(2,boundary, nxt_vtx_idx);
+            boundary = cat(2,boundary, nxt_vtx_idx(1,:));
         end
         
         % Update / dequeue lone_edges_list        
