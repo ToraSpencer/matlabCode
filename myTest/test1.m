@@ -213,15 +213,17 @@ index_tooth_change =  find(mergedToothVers(:,2)>(centerPatient(2) - ( patientYdi
     - p_patient(1))+ patientYdir(3)*(mergedToothVers(:,3) - p_patient(3)))/ patientYdir(2))+1);
 mergeVers = mergedToothVers(index_tooth_change,:);
 OBJwriteVertices('mergeVers.obj', mergeVers);
+
+
+newTris = reduceWrongTris(newTris);     % 去除面信息中错误的三角片。
+
 writeOBJ('补洞后的网格.obj', mergedToothVers, newTris);
-newTris = correctTris_double_centers(mergedToothVers, newTris, crown_ax.y);
-writeOBJ('补洞后纠正三角片后的网格.obj', mergedToothVers, newTris);
+
+
 
 
 %    病人牙冠部分多截一部分出来，用以确定标准牙根变形后点的位置，找到tooth_T中离patientTransform中最近点的位置，并将这些点变为新的点，即牙冠点的位置
-mergedToothVers_copy = mergedToothVers;
-BZ1 = zeros(size(mergedToothVers_copy,1),3);
-indices = 1:size(mergedToothVers_copy,1);
+indices = 1:size(mergedToothVers,1);
 
 %    合并网格中不需要变形的部分
 exterior = indices(mergedToothVers(:,2)<(p_patient(2) - ( patientYdir(1)*(mergedToothVers(:,1) ...
@@ -236,42 +238,61 @@ exterior = indices(mergedToothVers(:,2)<(p_patient(2) - ( patientYdir(1)*(merged
 
 % FOR DEBUG: 打印输入参数：
 OBJwriteVertices('合并区域的顶点.obj', mergeVers);
-OBJwriteVertices('非合并区域的顶点.obj', exterior);
+vecWriteUnsigned('非合并区域的顶点索引向量.obj', exterior);
+save('非合并区域的顶点索引向量.mat', 'exterior');
 OBJwriteVertices('合并区域参考的病人牙冠顶点.obj', patientTransform);
-writeOBJ('合并网格', mergedToothVers_copy, newTris);
+writeOBJ('合并网格', mergedToothVers, newTris);
 
 
 
 %       6.1 计算变形所需的参数
-[Omega, N0, N1, N2, outside_region_of_interest] = layers_from_handle(size(mergedToothVers_copy,1), newTris, exterior);
+[omega, N0, N1, N2, outside_region_of_interest] = layers_from_handle(size(mergedToothVers,1), newTris, exterior);
+save('mergedToothVers.mat', 'mergedToothVers');
+save('newTris.mat', 'newTris');
+save('omega.mat', 'omega');
+save('N0.mat','N0');
+save('N1.mat','N1');
+save('mergeVers.mat','mergeVers');
+save('patientTransform.mat', 'patientTransform');
+save('index_tooth_change.mat', 'index_tooth_change');
+%[bi_L,bi_U,bi_P,bi_Q,bi_R,bi_S,bi_M] = biharm_factor_system(mergedToothVers, newTris, 'ext', 'voronoi', 'no_flatten',omega, N0, N1);
 
-% for debug
-[Omega2, N02, N12, N22, outside_region_of_interest2] = layers_from_handle_modified(size(mergedToothVers_copy,1), newTris, exterior);
-disp(Omega == Omega2);
-disp(N0 == N02);
-disp(N1 == N12);
-disp(N2 == N22);
-disp(outside_region_of_interest == outside_region_of_interest2);
+[bi_L,bi_U,bi_P,bi_Q,bi_R,bi_S,bi_M] = biharm_factor_system_modified(mergedToothVers, newTris,omega, N0, N1);
 
-
-
-[bi_L,bi_U,bi_P,bi_Q,bi_R,bi_S,bi_M] = biharm_factor_system(mergedToothVers,newTris, 'ext', 'voronoi', 'no_flatten',Omega,N0,N1);
 
 
 %       6.2 执行变形——找到牙根部分跟牙冠变形部分最近的点，将牙根上的点拉至牙冠处
+finalVers = mergedToothVers;
 for i = 1:length(mergeVers)
    [minValue,r]=mindis(patientTransform,mergeVers(i,:),1);
    minvalue(i) = minValue;  row(i) = r;
-   mergedToothVers_copy(index_tooth_change(i),:) = patientTransform(r,:);
+   finalVers(index_tooth_change(i),:) = patientTransform(r,:);
 end
 
-finalVers = biharm_solve_with_factor( ...
-    bi_L, bi_U, bi_P, bi_Q, bi_R, bi_S, bi_M, ...
-    newTris, mergedToothVers_copy, Omega, N0, N1, 'ext', 'no_flatten', BZ1, mergedToothVers);
+BZ1 = zeros(size(mergedToothVers,1),3);
+
+
+save('finalVers.mat', 'finalVers');
+save('bi_L.mat', 'bi_L');
+save('bi_U.mat', 'bi_U');
+save('bi_P.mat', 'bi_P');
+save('bi_Q.mat', 'bi_Q');
+save('bi_R.mat', 'bi_R');
+save('bi_S.mat', 'bi_S');
+save('bi_M.mat', 'bi_M');
+
+% finalVers = biharm_solve_with_factor( ...
+%     bi_L, bi_U, bi_P, bi_Q, bi_R, bi_S, bi_M, ...
+%     newTris, finalVers, omega, N0, N1, 'ext', 'no_flatten', BZ1, mergedToothVers);
+
+finalVers = biharm_solve_with_factor_modified( ...
+    bi_L, bi_U, bi_P, bi_Q, bi_R, bi_S, ...
+     finalVers, omega, N0, N1);
+
 
 writeOBJ('最终结果.obj', finalVers, newTris);
 
 
-
+disp('finished');
 
  

@@ -13,8 +13,7 @@ function [Omega,N0,N1,N2,shrinking_handle ] = ...
   handle_faces = intersect(newTris,newTris.*~ismember(newTris,growing_interior),'rows');
   H0 = setdiff(newTris,union(handle_faces,interior_faces,'rows'),'rows');
   N0 = intersect(shrinking_handle,reshape(H0,1,size(H0,1)*size(H0,2)));
-  
-  
+ 
   growing_interior = [growing_interior N0];
   shrinking_handle = setdiff(shrinking_handle,N0);
 
@@ -22,6 +21,7 @@ function [Omega,N0,N1,N2,shrinking_handle ] = ...
   handle_faces = intersect(newTris,newTris.*~ismember(newTris,growing_interior),'rows');
   H1 = setdiff(newTris,union(handle_faces,interior_faces,'rows'),'rows');
   N1 = intersect(shrinking_handle,reshape(H1,1,size(H1,1)*size(H1,2)));
+  
   growing_interior = [growing_interior N1];
   shrinking_handle = setdiff(shrinking_handle,N1);
 
