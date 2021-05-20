@@ -34,33 +34,33 @@ function [bi_L,bi_U,bi_P,bi_Q,bi_R, bi_S, bi_M] = biharm_factor_system_modified(
  
  
   %bi_M = massmatrix(mergedToothVers, newTris, 'voronoi');
-  FT = newTris';
   elems = nonzeros(bi_S);
   theElem = bi_S(i(1), j(1));
   
-  lalala = [ ...
-    sqrt(sum((mergedToothVers(FT(:,2),:)-mergedToothVers(FT(:,3),:)).^2,2)) ...
-    sqrt(sum((mergedToothVers(FT(:,3),:)-mergedToothVers(FT(:,1),:)).^2,2)) ...
-    sqrt(sum((mergedToothVers(FT(:,1),:)-mergedToothVers(FT(:,2),:)).^2,2)) ...
+  ml = [ ...
+    sqrt(sum((mergedToothVers(newTris(2,:),:)-mergedToothVers(newTris(3,:),:)).^2,2)) ...
+    sqrt(sum((mergedToothVers(newTris(3,:),:)-mergedToothVers(newTris(1,:),:)).^2,2)) ...
+    sqrt(sum((mergedToothVers(newTris(1,:),:)-mergedToothVers(newTris(2,:),:)).^2,2)) ...
     ];
-  
+ 
 
  %bi_M = massmatrix_intrinsic(lalala, newTris, size(mergedToothVers,1),'voronoi');
     
     i1 = newTris(1,:); i2 = newTris(2,:); i3 = newTris(3,:); 
     
       cosines = [ ...
-        (lalala(:,3).^2+lalala(:,2).^2-lalala(:,1).^2)./(2*lalala(:,2).*lalala(:,3)), ...
-        (lalala(:,1).^2+lalala(:,3).^2-lalala(:,2).^2)./(2*lalala(:,1).*lalala(:,3)), ...
-        (lalala(:,1).^2+lalala(:,2).^2-lalala(:,3).^2)./(2*lalala(:,1).*lalala(:,2))];
-      barycentric = cosines.*lalala;
+        (ml(:,3).^2+ml(:,2).^2-ml(:,1).^2)./(2*ml(:,2).*ml(:,3)), ...
+        (ml(:,1).^2+ml(:,3).^2-ml(:,2).^2)./(2*ml(:,1).*ml(:,3)), ...
+        (ml(:,1).^2+ml(:,2).^2-ml(:,3).^2)./(2*ml(:,1).*ml(:,2))];
+      barycentric = cosines.*ml;
       normalized_barycentric = barycentric./[sum(barycentric')' sum(barycentric')' sum(barycentric')'];
       
+      
       areas = 0.25*sqrt( ...
-        (lalala(:,1) + lalala(:,2) - lalala(:,3)).* ...
-        (lalala(:,1) - lalala(:,2) + lalala(:,3)).* ...
-        (-lalala(:,1) + lalala(:,2) + lalala(:,3)).* ...
-        (lalala(:,1) + lalala(:,2) + lalala(:,3)));
+        (ml(:,1) + ml(:,2) - ml(:,3)).* ...
+        (ml(:,1) - ml(:,2) + ml(:,3)).* ...
+        (-ml(:,1) + ml(:,2) + ml(:,3)).* ...
+        (ml(:,1) + ml(:,2) + ml(:,3)));
     
       partial_triangle_areas = normalized_barycentric.*[areas areas areas];
       
@@ -70,6 +70,7 @@ function [bi_L,bi_U,bi_P,bi_Q,bi_R, bi_S, bi_M] = biharm_factor_system_modified(
     
       quads(cosines(:,1)<0,:) = [areas(cosines(:,1)<0,:)*0.5, ...
         areas(cosines(:,1)<0,:)*0.25, areas(cosines(:,1)<0,:)*0.25];
+    
       quads(cosines(:,2)<0,:) = [areas(cosines(:,2)<0,:)*0.25, ...
         areas(cosines(:,2)<0,:)*0.5, areas(cosines(:,2)<0,:)*0.25];
       quads(cosines(:,3)<0,:) = [areas(cosines(:,3)<0,:)*0.25, ...
@@ -79,10 +80,28 @@ function [bi_L,bi_U,bi_P,bi_Q,bi_R, bi_S, bi_M] = biharm_factor_system_modified(
       j = [i1 i2 i3];
       v = reshape(quads,size(quads,1)*3,1);
     bi_M = sparse(i,j,v,size(mergedToothVers,1), size(mergedToothVers,1));
+    
+    
+
+    
   n_Omega = size(omega,2);
   Z_Omega_Omega = sparse(n_Omega, n_Omega);
   
-  A = [ -bi_M(all,all)      bi_S(  all,omega);   ...
+  temp1 = -bi_M(all,all) ;
+  temp2 = bi_S(all,omega);
+  temp3 = bi_S(omega,all);
+  temp4 = Z_Omega_Omega;
+  
+  % for debug
+  elems1 = nonzeros(temp1);
+  elems2 = nonzeros(temp2);
+  elems3 = nonzeros(temp3);
+    A = [ -bi_M(all,all)      bi_S(  all,omega);   ...        % 546 X 546
          bi_S(omega,all)    Z_Omega_Omega ];     
+     
+  elemsa = nonzeros(A);   
+     
   [bi_L,bi_U,bi_P,bi_Q,bi_R] = lu(A);
+  
+  disp('finished.');
 end
