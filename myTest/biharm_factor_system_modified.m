@@ -1,4 +1,4 @@
-function [bi_L,bi_U,bi_P,bi_Q,bi_R, bi_S, bi_M] = biharm_factor_system_modified( ...
+function [bi_L,bi_U,bi_P,bi_Q,bi_D, bi_S, bi_M] = biharm_factor_system_modified( ...
   mergedToothVers, ...
   newTris, ...
   omega, ...
@@ -99,9 +99,37 @@ function [bi_L,bi_U,bi_P,bi_Q,bi_R, bi_S, bi_M] = biharm_factor_system_modified(
     A = [ -bi_M(all,all)      bi_S(  all,omega);   ...        % 546 X 546
          bi_S(omega,all)    Z_Omega_Omega ];     
      
-  elemsa = nonzeros(A);   
+
+   save('A.mat', 'A');  
      
-  [bi_L,bi_U,bi_P,bi_Q,bi_R] = lu(A);
+     
+  [bi_L,bi_U,bi_P,bi_Q,bi_D] = lu(A);
   
-  disp('finished.');
+  
+  
+  %% for debug
+  elemsa = nonzeros(A);   
+  elemsl = nonzeros(bi_L); 
+  elemsu = nonzeros(bi_U); 
+  elemsp = nonzeros(bi_P); 
+  elemsq = nonzeros(bi_Q); 
+  elemsr = nonzeros(bi_D); 
+
+  
+  % P*(D\S)*Q = L*U
+  left = bi_P*(bi_D\A)*bi_Q;
+  right = bi_L*bi_U;
+  elemleft = nonzeros(left);
+  elemright = nonzeros(right);
+
+  
+  threshold = (elemleft > 0.001*ones(size(elemleft)));
+  elemleft = elemleft(threshold);
+  threshold = (elemright > 0.001*ones(size(elemright)));
+  elemright = elemright(threshold);
+  
+  
+ 
+  
+ disp('finished.');
 end

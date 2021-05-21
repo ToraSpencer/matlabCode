@@ -1,7 +1,8 @@
-function[minValues,rows]=mindis(C,P,k)
+function[minValues,rows]=mindis(patientTransform,vers,k)
+
 % [N,M]=size(C);
 % Distance=zeros([1,N]);
-Distance=sqrt(sum((repmat((P),length(C),1) - C).^2,2));
+Distance=sqrt(sum((repmat((vers),length(patientTransform),1) - patientTransform).^2,2));
 x = [(1:length(Distance))' Distance];
 [u,v]=sort(x(:,2));
 minValues = u(1:k);

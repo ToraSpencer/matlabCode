@@ -7,3 +7,11 @@
 %           打开函数指的是打开函数文件。
 %           变量只能在debug的时候打开，可以显示数据的详情。
 
+%% 排序算法——sort()
+clc;
+clear all;
+x = round(100 * rand(1, 10));
+disp(x);
+[u, v] = sort(x);
+disp(u);
+disp(v);

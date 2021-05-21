@@ -1,14 +1,26 @@
 %% 基本运算
+% 右除/  左除\
+clc;
+clear all;
+m1 = rand(3,3);
+m2 = rand(3,3);
+m3 = m1*m2;
+temp1 = m3/m2;          % 右除： m1 == m3/m2 == m3 * inv(m2);
+temp2 = m1\m3;          % 左除： m2 == m1\m3 == inv(m1)*m3;
+
+
 
 %% 基本变换
 
+
+
 %% 高级运算
 
-% 范数
-%       n = norm(X,p) 返回矩阵 X 的 p-范数，其中 p 为 1、2 或 Inf：
-%       如果 p = 1，则 n 是矩阵的最大绝对列之和。
-%       如果 p = 2，则 n 近似于 max(svd(X))。这与 norm(X) 等效。
-%       如果 p = Inf，则 n 是矩阵的最大绝对行之和。
+%%    范数
+%               n = norm(X,p) 返回矩阵 X 的 p-范数，其中 p 为 1、2 或 Inf：
+%               如果 p = 1，则 n 是矩阵的最大绝对列之和。
+%               如果 p = 2，则 n 近似于 max(svd(X))。这与 norm(X) 等效。
+%               如果 p = Inf，则 n 是矩阵的最大绝对行之和。
 v1 = round(rand(1, 3) * 10);
 m1 = round(rand(2, 3) * 10);
 disp(m1);
@@ -55,6 +67,28 @@ m1 = [1,2,3; 4,5,6; 1,2,3];
 m2 = [-1,-2,-3; 4, 5, 6; 7, 8, 9; -4, -5, -6];
 m3 = setdiff(m1, m2, 'rows');
 disp(m3);
+
+
+
+%% lu分解——[L,U,P,Q,D] = lu(S)是高斯消元法的矩阵形式
+% S == D * inv(P) * L * U * inv(Q)
+% L是下三角矩阵，U是上三角矩阵，inv(P)是左乘置换矩阵，inv(Q)是右乘置换矩阵，D是对角缩放矩阵。
+clc;
+clear all;
+m1 = [1,2,3,4;5,6,7,8;9,10,0,12;13,14,15,0];
+disp(rank(m1));
+disp(det(m1));
+sm1 = sparse(m1);
+[sL, sU, sP, sQ, sD] = lu(sm1);
+L = full(sL);
+U = full(sU);
+P = full(sP);
+Q = full(sQ);
+D = full(sD);
+disp(m1);
+disp(D * inv(P) * L * U * inv(Q) );
+disp(D);
+
 
 
 %% 稀疏矩阵
