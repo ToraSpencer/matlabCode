@@ -32,7 +32,7 @@ norm2 = norm(m1, 2);
 disp(norm2);
 disp(norm(v1, 2));
 
-%   矩阵求交：
+%   矩阵求交：intersect()——
 A = [7 1 7 7 4]; 
 B = [7 0 4 4 0];
 [C,ia,ib] = intersect(A,B);
