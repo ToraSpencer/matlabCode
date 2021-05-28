@@ -7,10 +7,15 @@
 #指定不忽略的文件
 !*.m
 !*.gitignore
-!/meshDemon/*
-!/数学小工具/*
-!/MATLAB基础/*
-!/myTest/*
+!/myTest/dental_crown.mat
+!/myTest/dentalmodelwithroot0.1forlow.mat
+!/myTest/daxisofdental_crowm
+!/myTest/trfromtoothtocrown.mat
+!/myTest/带牙根标准牙.obj
+!/myTest/FDILower__.dxt
+!/myTest/FDIUpper__.dxt
+!/myTest/locationLower__.dxt
+!/myTest/locationUpper__.dxt
 
 
 #忽略子目录下的所有文件

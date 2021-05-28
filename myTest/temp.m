@@ -1,28 +1,21 @@
 clc;
 close all;
 clear all;
+ 
 %%
-load('cutPatientVers.mat');
-load('rootCutVers.mat');
+load('patientTooth.mat');
+load('triIdxInCutPatient.mat');
+load('raw_edges_list.mat');
 
-[tris1] = MyCrustOpen(cutPatientVers);
-[tris2] = MyCrustOpen(rootCutVers);
+tris = patientTooth.face(triIdxInCutPatient,:);
 
-writeOBJ('切割牙冠.Obj', cutPatientVers, tris1);          
-writeOBJ('切割牙根.Obj', rootCutVers, tris2);    
+trisPlus = cat(2,tris,tris(:,1));  %   
+R = repelem(trisPlus,1,[1 2 2 1]); %  三角片中的[x,y,z]改写为[x,y,y,z,z,x];
 
-%%
-% 补洞
-hole = select_holes_and_boundary(cutPatientVers, tris1);
-newTris = fill_mesh_holes(cutPatientVers, tris1, hole,'closed',99999999);
-newTris = double(newTris);
-newTris = reduceWrongTris(newTris);  
+edgeListTemp = cell2mat(cellfun(@(x) reshape(x,[2,3])',num2cell(R,2),'un',0));  % 一行变成三列：[x,y,y,z,z,x]→ [x,y; y,z; z,x]
 
-hole = select_holes_and_boundary(cutPatientVers, newTris);
-newTris = fill_mesh_holes(cutPatientVers, newTris, hole,'closed',99999999);
-newTris = double(newTris);
-newTris = reduceWrongTris(newTris);  
-
-
-writeOBJ('补洞后切割牙冠.obj', cutPatientVers, newTris);
-
+edgeList = sort(edgeListTemp,2);   % 每一行中两个点索引，排序成前小后大。
+    
+ disp('finished.');
+ 
+ 

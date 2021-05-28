@@ -46,7 +46,7 @@ while ~isempty(lone_edges_list)
     % Nb holes / boundaries times
     while nxt_vtx_idx ~= first_vtx_idx % && ~isempty(nxt_vtx_idx)
                        
-        i = find(any(lone_edges_list == nxt_vtx_idx,2));
+        i = find(any(lone_edges_list == nxt_vtx_idx(1),2));
         nxt_edge = lone_edges_list(i,:);
         
         nxt_vtx_idx = setdiff(nxt_edge,nxt_vtx_idx); % must be the unique shared vertex beteween these two edges        

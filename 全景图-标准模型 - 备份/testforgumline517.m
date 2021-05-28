@@ -114,7 +114,10 @@ if s ==1 || s ==2
             nu = find( ff_b == index_bingren(j));
             f_b0(sub2ind(size(f_b0), nu)) = j;
         end
-      
+%         HF = fill_holes(point_bingren,f_b0);
+%         b = select_holes_and_boundary(point_bingren,[f_b0;HF]);
+        
+        
         
 %         
         
@@ -326,29 +329,59 @@ if s ==1 || s ==2
                     dt = [dt;[edg_b(roww(j):roww(j+1)-1,:),repmat(edg_t(j,2),roww(j+1)-roww(j),1)]];
                 end
             end
-            if roww(end) > length(edg_b)/2 && roww(end)<length(edg_b)
+            if roww(end)==length(edg_b)
+                dt = [dt;[edg_b(roww(end),:),edg_t(1,1)]];
+                if roww(1)~=1
+                    dt = [dt;[edg_b(1:roww(1),:),repmat(edg_t(1,1),roww(1),1)]];
+                end
+            elseif roww(end) > length(edg_b)/2 && roww(end)<length(edg_b)
                 dt = [dt;[edg_b(roww(end):length(edg_b),:),repmat(edg_t(1,1),length(edg_b)-roww(end),1)]];
-            elseif  roww(end) < length(edg_b)/2
-               dt = [dt;[edg_b(1:roww(end),:),repmat(edg_t(end,1),roww(end),1)]]; 
+                if roww(1)~=1
+                    dt = [dt;[edg_b(1:roww(1),:),repmat(edg_t(1,1),roww(1),1)]];
+                end
+            elseif  roww(end) < length(edg_b)/2 && roww(1)~=1
+               s = find(roww > length(edg_b)/2);
+               dt = [dt;[edg_b(roww(s(end)):length(edg_b),:),repmat(edg_t(s(end),2),length(edg_b)-roww(s(end))+1,1)]];
+               dt = [dt;[edg_b(1:roww(end),:),repmat(edg_t(s(end),2),roww(end),1)]]; 
+               dt = [dt;[edg_b(roww(end):roww(1)-1,:),repmat(edg_t(1,1),roww(1)-roww(end),1)]]; 
             end
-            if roww(1)~=1
-                dt = [dt;[edg_b(1:roww(1)-1,:),repmat(edg_t(1,1),roww(1)-1,1)]];
-            end
+            
         else
            s = find(roww<length(edg_b)/2);
-           roww = [roww roww(1:s(1)-1)];
+%            roww = [roww roww(1:s(1)-1)];
            for j = s(1):length(roww)-1
                 if roww(j) ~= roww(j+1) 
-                    dt = [dt;[edg_b(roww(j):roww(j+1),:),repmat(edg_t(j,2),roww(j+1)-roww(j)+1,1)]];   
+                    dt = [dt;[edg_b(roww(j):roww(j+1)-1,:),repmat(edg_t(j,2),roww(j+1)-roww(j),1)]];   
                 end
                 
            end 
-           dt = [dt;[edg_b(1:roww(s(1))-1,:),repmat(edg_t(1,2),roww(s(1))-1,1)]];
+           if s(1)>2
+                for j = 1:s(1)-2
+                     if roww(j) ~= roww(j+1) 
+                        dt = [dt;[edg_b(roww(j):roww(j+1)-1,:),repmat(edg_t(j,2),roww(j+1)-roww(j),1)]];   
+                     end
+                end
+           end
+           if roww(end)<roww(1) 
+              dt = [dt;[edg_b(roww(end):roww(1)-1,:),repmat(edg_t(end,2),roww(1)-roww(end),1)]];
+           end
+            if roww(s(1)-1)<=length(edg_b)
+                 dt = [dt;[edg_b(roww(s(1)-1):length(edg_b),:),repmat(edg_t(s(1)-1,2),length(edg_b)-roww(s(1)-1)+1,1)]];
+            end
+            dt = [dt;[edg_b(1:roww(s(1))-1,:),repmat(edg_t(s(1),1),roww(s(1))-1,1)]];
+            
+           
+%            dt = [dt;[edg_b(1:roww(s(1))-1,:),repmat(edg_t(1,2),roww(s(1))-1,1)]];
+%            dt = [dt;[edg_b(roww(1):length(edg_b),:),repmat(edg_t(s(1),1),length(edg_b)-roww(1)+1,1)]];
+%            if roww(end)<= roww(1)
+%                dt = [dt;[edg_b(roww(end):roww(1),:),repmat(edg_t(end,2),roww(1)-roww(end)+1,1)]];
+%            end
 %            if r
 %                dt = [dt;[edg_b(1:s(1)-1,:),repmat(edg_t(1,2),s(1)-1,1)]];
 %            end
         end
-        b = select_holes_and_boundary(v_end,[f_end;dt]);
+        ff = [f_end;dt];
+        b = select_holes_and_boundary(v_end,ff);
                 
         pats = [];
 %         for j = 1:length(dt)

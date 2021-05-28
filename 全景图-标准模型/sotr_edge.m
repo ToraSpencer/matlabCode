@@ -1,5 +1,5 @@
  
-function edg_b = sotr_edge(Edge_b, star)
+function edg_b = sotr_edge(Edge_b,star)
 %          center = mean(edgepoints);
 %          start_pointA = v(Edge_b(1,1),:);
 %          start_pointB = v(Edge_b(1,2),:);

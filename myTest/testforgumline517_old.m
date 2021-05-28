@@ -1,8 +1,6 @@
 clc
 clear all
-%%
-functionname='testforgumline517_1.m'; 
-functiondir=which(functionname);
+functionname='testforgumline517.m'; functiondir=which(functionname);
 functiondir=functiondir(1:end-length(functionname));
 addpath([functiondir 'trianglerayintersection'])
 addpath([functiondir 'toothmodel'])
@@ -20,16 +18,13 @@ addpath([functiondir 'modelStadard'])
 addpath([functiondir 'testdata'])
 addpath([functiondir 'mesh process'])
 addpath([functiondir 'testdata(4)'])
-
-%%  1.
-
 % % 加载标准牙
 load('dental_crown.mat');
 load('dentalmodelwithroot0.1forlow.mat');
 load('axisofdental_crowm');
 load('trfromtoothtocrown.mat');
- 
 
+%%  1.
 x = 11;             % 取11号牙来测试
 for i = 1:28
     if  dentalwithtooth1(i).ID == x
@@ -50,18 +45,24 @@ for k = 1:28
 end
 
 
-s = fix(x/10);  %取整
-g = mod(x,10); %取余
+temp = Read_Obj('带牙根标准牙.obj');      % 原数据三角片反了，这个是自己修正的。
+rootTooth.vertices = temp.vertex;
+rootTooth.faces = temp.face;
+
+
+s = fix(x/10);      %取整
+g = mod(x,10);      %取余
+ 
 
 fdi = textread('FDIUpper__.dxt');
 toothIdx = find (fdi == x);
+ 
 namestr1 = ['toothUpper_',num2str(toothIdx-1),'.','obj'];
-patientTooth = Read_Obj(namestr1);                       % 病人的牙冠网格
+patientTooth = Read_Obj(namestr1);
 namestr2 = ['gumlineUpper_',num2str(toothIdx-1),'.','obj'];
-
 gumline =  ReadObj(namestr2);
 axis = ReadObj('AXISUpper_.obj');
-axisPatient = axis( (3*(toothIdx-1) + 1) : 3*toothIdx, :);       % 病人牙齿的三个牙轴方向向量
+axisPatient = axis(3*(toothIdx-1)+1:3*toothIdx,:);
 crownTooth = crown.model;          % 标准牙冠
 
 
@@ -71,53 +72,64 @@ centerPatient = mean(patientTooth.vertex);
 y = max(gumline(:,2));
 p_patient =[centerPatient(1),y(1),centerPatient(3)];
 patientYdir = axisPatient(2,:);
- 
+
 
 cutPatientIdx = find(patientTooth.vertex(:,2)<=(p_patient(2) - (patientYdir(1)*(patientTooth.vertex(:,1) - p_patient(1))+patientYdir(3)*(patientTooth.vertex(:,3) - p_patient(3)))/patientYdir(2))-2);
 cutPatientCrownVers = patientTooth.vertex(cutPatientIdx,:);
 
 
-
 %       1.3 确定病人牙冠边界
 a1 = ismember(patientTooth.face(:,1),cutPatientIdx);
-aa1 = find(a1==1);
+aa1 = find(a1==1);      
 a2 = ismember(patientTooth.face(:,2),cutPatientIdx);
 aa2 = find(a2==1);
 a3 = ismember(patientTooth.face(:,3),cutPatientIdx);
 aa3 = find(a3==1);
-[c1,~,~] = intersect(aa1,aa2);c2 = intersect(c1,aa3);
+[c1,~,~] = intersect(aa1,aa2);
+triIdxInCutPatient = intersect(c1,aa3);     % 列向量，patientTooth中三个顶点索引都能在cutPatientIdx中找到的三角片的索引。
+
+
+save('patientTooth.mat', 'patientTooth');
+save('triIdxInCutPatient.mat', 'triIdxInCutPatient');
 
 
 %找边界
-[raw_edges_list] = query_edges_list(patientTooth.face(c2,:),'sorted');
-[~,~,iu] = unique(sort(raw_edges_list,2),'rows');
+trisInCutPatient = patientTooth.face(triIdxInCutPatient,:);
+[raw_edges_list] = query_edges_list(trisInCutPatient,'sorted');
+
+
+[~,~,iu] = unique(raw_edges_list,'rows');           % 排序，iu为排序名次的向量；行中先比较第一个元素，再比较第二个元素。
 [i3,i4] = histc(iu,unique(iu));
-lone_edges_idx_vect = i3(i4) == 1;
-lone_edges_list = unique(raw_edges_list(lone_edges_idx_vect,:),'rows');
+lone_edges_idx_vect = i3(i4) == 1;          
 
-% 边界点：
-edge_p_b_local_list = unique([lone_edges_list(:,1);lone_edges_list(:,2)]);
+temp = raw_edges_list(lone_edges_idx_vect,:);       % i3 == i4的行
+bdryEdges = unique(temp,'rows');
 
-[C_b,edge_p_b_local,~] = intersect(cutPatientIdx,edge_p_b_local_list);
-edge_p_b = cutPatientCrownVers(edge_p_b_local,:);
-Edge_b = zeros(size(lone_edges_list));
-for i = 1:length(edge_p_b_local)
-    nu = find(lone_edges_list == edge_p_b_local_list(i));
-    Edge_b(nu) = edge_p_b_local(i);
+save('raw_edges_list.mat', 'raw_edges_list');
+
+%边界点：
+edgeVerIdx = unique([bdryEdges(:,1); bdryEdges(:,2)]);      % 点索引向量，边界中所有点的索引，无重复
+
+%边界点在牙冠点中的位置
+[~,tempRowIdx,~] = intersect(cutPatientIdx, edgeVerIdx);
+edgeVers = cutPatientCrownVers(tempRowIdx,:);            % 所有边界点
+
+%           老索引——原病人网格中的点索引； 新索引——切割之后的病人网格中的点索引；
+
+bdryEdges_newRep = zeros(size(bdryEdges));       % 用新索引表示的边界边。
+for i = 1:length(tempRowIdx)
+    index = find(bdryEdges == edgeVerIdx(i));
+    bdryEdges_newRep(index) = tempRowIdx(i);
 end
 
 
+patientEdge = sotr_edge(bdryEdges_newRep,1);     % 排序后的病人切割牙冠边界点,新索引。从上到下排成(a, b);(b, c);(c, d);(d, e)。。的形式
+patientCutTris = ones(size(trisInCutPatient));  % 新索引表示的病人切割网格的三角片。
 
-patientEdge = sotr_edge(Edge_b,1);
-
-
-ff_b = patientTooth.face(c2,:);
-patientEdgeTris = ones (size(ff_b));
-for j = 1:length(cutPatientCrownVers)
-    nu = find( ff_b == cutPatientIdx(j));
-    patientEdgeTris(sub2ind(size(patientEdgeTris), nu)) = j;
+for j = 1:length(cutPatientCrownVers)       
+    index = find( trisInCutPatient == cutPatientIdx(j));
+    patientCutTris(sub2ind(size(patientCutTris), index)) = j;
 end
-
 
 
 %        1.4 确定带根标准牙切割参数
@@ -138,76 +150,87 @@ vz_tooth = abs(p_tooth_biaozhun(2) - (rootYdir(1)*(rootTooth.vertices(index_toot
            +rootYdir(3)*(rootTooth.vertices(index_tooth_biaozhun,3)-p_tooth_biaozhun(3)))/rootYdir(2));
 in_tooth = find(vz_tooth == max(vz_tooth));
 point_tooth = rootTooth.vertices(index_tooth_biaozhun(in_tooth),:);
-centcrownintooth = centerCrown+point_tooth-point_crown;%切后标准根的边缘中心
-
+centcrownintooth = centerCrown+point_tooth-point_crown;   %切后标准根的边缘中心
 
 
 %%
 % 2. 对齐——利用标准牙和病人牙齿的中心点以及三轴进行对齐
-R = inv([axisStandard.x;axisStandard.y;axisStandard.z])*axisPatient;
-C=centcrownintooth*R;
-tooth_T = (rootTooth.vertices) *R + repmat((centerPatient - C),length(rootTooth.vertices),1);
+temp = inv([axisStandard.x;axisStandard.y;axisStandard.z]);
+R = temp * axisPatient;
+newCent = centcrownintooth*R;
 
-%       2.1 旋转平移带根标准牙
+%       2.1 第一次旋转平移
+moveVec = centerPatient - newCent;
+movedRootTooth1 = (rootTooth.vertices) *R + repmat(moveVec,length(rootTooth.vertices),1);
+
+%整体变化牙齿的形态
 index_1 = find(patientTooth.vertex(:,2)>=(centerPatient(2) - (patientYdir(1)*(patientTooth.vertex(:,1) - p_patient(1))+patientYdir(3)*(patientTooth.vertex(:,3) - p_patient(3)))/patientYdir(2))...
         & patientTooth.vertex(:,2)<=(p_patient(2) - (patientYdir(1)*(patientTooth.vertex(:,1) - p_patient(1))+patientYdir(3)*(patientTooth.vertex(:,3) - p_patient(3)))/patientYdir(2))+0.5);
-point1 = patientTooth.vertex(index_1,:);
-index_2 = find(tooth_T(:,2)>=(centerPatient(2) - (patientYdir(1)*(tooth_T(:,1) - p_patient(1))+patientYdir(3)*(tooth_T(:,3) - p_patient(3)))/patientYdir(2))...
-        & tooth_T(:,2)<=(p_patient(2) - (patientYdir(1)*(tooth_T(:,1) - p_patient(1))+patientYdir(3)*(tooth_T(:,3) - p_patient(3)))/patientYdir(2))+0.5);
-point2 = tooth_T(index_2,:);
+point1 = patientTooth.vertex(index_1,:);        % 病人牙齿在自身坐标轴下，y方向上高于p_patient的点集
+index_2 = find(movedRootTooth1(:,2)>=(centerPatient(2) - (patientYdir(1)*(movedRootTooth1(:,1) - p_patient(1))+patientYdir(3)*(movedRootTooth1(:,3) - p_patient(3)))/patientYdir(2))...
+        & movedRootTooth1(:,2)<=(p_patient(2) - (patientYdir(1)*(movedRootTooth1(:,1) - p_patient(1))+patientYdir(3)*(movedRootTooth1(:,3) - p_patient(3)))/patientYdir(2))+0.5);
+point2 = movedRootTooth1(index_2,:);            % 第一次旋转平移后的牙根在病人牙轴坐标系下，y方向上高于p_patient的点集
+ 
 
+save('movedRootTooth1.mat', 'movedRootTooth1');
+save('point1.mat', 'point1');
+save('point2.mat', 'point2');
+writeOBJ('第一次旋转平移后的带根标准牙.obj',movedRootTooth1, rootTooth.faces)
+OBJwriteVertices('point1.obj', point1);
+OBJwriteVertices('point2.obj', point2);
+
+%       2.2 第二次旋转平移
 for i = 1:length(point2)
    [minValue,r]=mindis(point1,point2(i,:),1);
-   minvalue(i) = minValue;  row(i) = r;
+   row(i) = r;
 end
 
-point11 = point1(row,:);
-[R,t,BRt,e,~,~] = icp(point11,point2);
-tooth_T = bsxfun(@plus,tooth_T*R,t);
+point1 = point1(row,:);
 
-save('tooth_T.mat', 'tooth_T');
-OBJwriteVertices('第二次旋转平移后的带根标准牙.obj', tooth_T);
+[R,t,BRt,e,~,~] = icp(point1,point2);
+movedRootTooth2 = bsxfun(@plus,movedRootTooth1*R,t);
 
+save('movedRootTooth2.mat', 'movedRootTooth2');
+OBJwriteVertices('第二次旋转平移后的带根标准牙.obj', movedRootTooth2);
 
 
 %%
 % 3. 切割——确定带根标准牙的切割部分。
-
-%       3.1 
-
-rootCutIdx =  find(tooth_T(:,2)>(p_patient(2) - ( patientYdir(1)*(tooth_T(:,1) ...
-                 - p_patient(1))+ patientYdir(3)*(tooth_T(:,3) - p_patient(3)))/ patientYdir(2))-2);%切出来的牙根的索引值%注意！按照病人牙冠方向切
-rootCutVers = tooth_T(rootCutIdx ,:);
-
+rootCutIdx =  find(movedRootTooth2(:,2)>(p_patient(2) - ( patientYdir(1)*(movedRootTooth2(:,1) ...
+                 - p_patient(1))+ patientYdir(3)*(movedRootTooth2(:,3) - p_patient(3)))/ patientYdir(2))-2);%切出来的牙根的索引值%注意！按照病人牙冠方向切
+rootCutVers = movedRootTooth2(rootCutIdx ,:);
 
 OBJwriteVertices('合并网格的牙根部分点集.obj', rootCutVers);
 
-%% 4. 处理三角片信息
 
+
+%  处理三角片信息
 a_t1 = ismember(rootTooth.faces(:,1),rootCutIdx);
 aa_t1 = find(a_t1==1);
 a_t2 = ismember(rootTooth.faces(:,2),rootCutIdx);
 aa_t2 = find(a_t2==1);
 a_t3 = ismember(rootTooth.faces(:,3),rootCutIdx);
 aa_t3 = find(a_t3==1);
-[c_t1,~,~] = intersect(aa_t1,aa_t2);c_t2 = intersect(c_t1,aa_t3);
+[c_t1,~,~] = intersect(aa_t1,aa_t2);
+c_t2 = intersect(c_t1,aa_t3);   % 列向量，root中三个顶点索引都能在cutRoot中找到的三角片的索引。
 
-
+%找边界
 [raw_edges_list_t] = query_edges_list(rootTooth.faces(c_t2,:),'sorted');
 [~,~,iu_t] = unique(sort(raw_edges_list_t,2),'rows');
 [i3,i4] = histc(iu_t,unique(iu_t));
 lone_edges_idx_vect_t = i3(i4) == 1;
 lone_edges_list_t = unique(raw_edges_list_t(lone_edges_idx_vect_t,:),'rows');
 
+Edge_t = zeros(size(lone_edges_list_t));
 
+ 
 ff_t = rootTooth.faces(c_t2,:);
 f_t0 = ones (size(ff_t));
 for j = 1:length(rootCutVers)
-    nu = find( ff_t == rootCutIdx(j));
-    f_t0(sub2ind(size(f_t0), nu)) = j+length(cutPatientCrownVers);
+    index = find( ff_t == rootCutIdx(j));
+    f_t0(sub2ind(size(f_t0), index)) = j+length(cutPatientCrownVers);
 end
-f_end = [patientEdgeTris;f_t0];
-v_end = [cutPatientCrownVers;rootCutVers];
+f_end = [patientCutTris;f_t0];v_end = [cutPatientCrownVers;rootCutVers];
 
 %边界点：
 edge_p_t_local_list = unique([lone_edges_list_t(:,1);lone_edges_list_t(:,2)]);
@@ -218,38 +241,32 @@ edge_p_t_local_list = unique([lone_edges_list_t(:,1);lone_edges_list_t(:,2)]);
 edge_p_t = rootCutVers(edge_p_t_local,:);
 edge_p_t_local = edge_p_t_local+length(cutPatientCrownVers);
 Edge_t = zeros(size(lone_edges_list_t));
-
 for i = 1:length(edge_p_t_local)
-    nu = find(lone_edges_list_t == edge_p_t_local_list(i));
-    Edge_t(nu) = edge_p_t_local(i);
+    index = find(lone_edges_list_t == edge_p_t_local_list(i));
+    Edge_t(index) = edge_p_t_local(i);
 end
 
 
 %5.20更新
 %1.所有的边界点按照一个方向排序
-[~,r]=mindis(v_end(Edge_t(:,1),:),v_end(Edge_b(1,1),:),1);
-
+[~,r]=mindis(v_end(Edge_t(:,1),:),v_end(bdryEdges_newRep(1,1),:),1);
 
 %判断[edg_b(1,：),Edge_t(r,1)]de 方向与[Edge_t(r,：),edg_b(1,1)]的方向是否相同
 %为了防止个别特殊情况，找Edge_t(r,1)后面的第二个点
 [r2,r3] = ind2sub(size(Edge_t),find(Edge_t == Edge_t(r,2)));
 rr = r2(ismember(r2,r)==0);rm = r3(ismember(r2,r)==0);
-tri11 = v_end(patientEdge(3,1),:) - v_end(patientEdge(1,1),:);
-tri12 = v_end(Edge_t(r,1),:) - v_end(patientEdge(3,1),:);
-tri21 = v_end(Edge_t(rr,3-rm),:) - v_end(Edge_t(r,1),:);
-tri22 = v_end(patientEdge(1,1),:) - v_end(Edge_t(rr,3-rm),:);
-s_b = sign(dot(v_end(patientEdge(1,1),:) -mean(edge_p_b),cross(tri11,tri12)));
+tri11 = v_end(patientEdge(3,1),:) - v_end(patientEdge(1,1),:);tri12 = v_end(Edge_t(r,1),:) - v_end(patientEdge(3,1),:);
+tri21 = v_end(Edge_t(rr,3-rm),:) - v_end(Edge_t(r,1),:);tri22 = v_end(patientEdge(1,1),:) - v_end(Edge_t(rr,3-rm),:);
+s_b = sign(dot(v_end(patientEdge(1,1),:) -mean(edgeVers),cross(tri11,tri12)));
 s_t = sign(dot(v_end(Edge_t(r,1),:) - mean(edge_p_t),cross(tri21,tri22)));
-
 
 if s_b ~= s_t
    edg_t = sotr_edge(Edge_t,r);
 else
     E_t = [Edge_t(:,2),Edge_t(:,1)];
     edg_t = sotr_edge(E_t,r);
-end 
+end
 
-%边界点融合,以稀疏（牙根）的边线为基准，找密集（牙冠）中离两个点距离最近的点
 
 dt = [];
 
@@ -259,10 +276,11 @@ for j = 1:length(edg_t)
 
     [~,ro]=mindis(v_end(patientEdge(:,1),:),(p1+p2)/2,1);
     roww(j) = ro;
+
     dt = [dt;[edg_t(j,:),patientEdge(ro,1)]];
 
-end
 
+end
 if roww(1)<length(patientEdge)/2
     for j = 1:length(roww)-1
         if roww(j) ~= roww(j+1) 
@@ -300,7 +318,6 @@ index_crown_change = find(patientTooth.vertex(:,2)>(centerPatient(2) - (patientY
                         & patientTooth.vertex(:,2)<=(p_patient(2) - (patientYdir(1)*(patientTooth.vertex(:,1) - p_patient(1))+patientYdir(3)*(patientTooth.vertex(:,3) - p_patient(3)))/patientYdir(2))+2);
 patientTransform = patientTooth.vertex(index_crown_change,:);
 
-
 %牙冠牙根分别形成网格
 mergedToothVers = v_end;
 index_tooth_change =  find(mergedToothVers(:,2)>(centerPatient(2) - ( patientYdir(1)*(mergedToothVers(:,1) ...
@@ -311,19 +328,19 @@ mergeRegionVers = mergedToothVers(index_tooth_change,:);
 
 
 
-%    合并网格中不需要变形的部分
+%病人牙冠部分多截一部分出来，用以确定标准牙根变形后点的位置，找到tooth_T中离crownforchange中最近点的位置，并将这些点变为新的点，即牙冠点的位置
 indices = 1:size(mergedToothVers,1);
+%不变形的网格
 exterior = indices(mergedToothVers(:,2)<(p_patient(2) - ( patientYdir(1)*(mergedToothVers(:,1) ...
     - p_patient(1))+ patientYdir(3)*(mergedToothVers(:,3) - p_patient(3)))/ patientYdir(2))-0.6...
     |mergedToothVers(:,2)>=(p_patient(2) - ( patientYdir(1)*(mergedToothVers(:,1) ...
     - p_patient(1))+ patientYdir(3)*(mergedToothVers(:,3) - p_patient(3)))/ patientYdir(2))+3);
-
  
-%%
-% 6. 变形
+   
+%% 6. 变形
+newTris = [f_end;dt];
 [omega, N0, N1, N2, outside_region_of_interest] = layers_from_handle(size(mergedToothVers,1), newTris, exterior);
 [bi_L,bi_U,bi_P,bi_Q,bi_R,bi_S,bi_M] = biharm_factor_system(mergedToothVers,newTris, 'ext','voronoi', 'no_flatten',omega,N0,N1);
-
 
 %找到牙根部分跟牙冠变形部分最近的点，将牙根上的点拉至牙冠处
 finalVers = mergedToothVers;
@@ -338,8 +355,7 @@ finalVers = biharm_solve_with_factor( ...
     bi_L, bi_U, bi_P, bi_Q, bi_R, bi_S, bi_M, ...
     newTris, finalVers, omega, N0, N1, 'ext',  'no_flatten',BZ1,mergedToothVers);
  
-
-% axis image
+ 
 writeOBJ('最终网格.obj',finalVers, newTris)
 
 
