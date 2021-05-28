@@ -151,6 +151,7 @@ newCent = centcrownintooth*R;
 moveVec = centerPatient - newCent;
 movedRootTooth1 = (rootTooth.vertices) *R + repmat(moveVec,length(rootTooth.vertices),1);
 
+save('movedRootTooth1.mat','movedRootTooth1');
 
 %       2.3 求出icp算法需要的两个点集：
 index_1 = find(patientTooth.vertex(:,2)>=(centerPatient(2) - (patientYdir(1)*(patientTooth.vertex(:,1) - p_patient(1))+patientYdir(3)*(patientTooth.vertex(:,3) - p_patient(3)))/patientYdir(2))...
@@ -160,6 +161,10 @@ index_2 = find(movedRootTooth1(:,2)>=(centerPatient(2) - (patientYdir(1)*(movedR
         & movedRootTooth1(:,2)<=(p_patient(2) - (patientYdir(1)*(movedRootTooth1(:,1) - p_patient(1))+patientYdir(3)*(movedRootTooth1(:,3) - p_patient(3)))/patientYdir(2))+0.5);
 point2 = movedRootTooth1(index_2,:);
 
+
+
+save('point1.mat','point1');
+save('point2.mat','point2');
 
 %       2.4 icp计算
 for i = 1:length(point2)
@@ -174,6 +179,7 @@ point1 = point1(row,:);
 
 %       2.5 第二次旋转平移
 movedRootTooth2 = bsxfun(@plus,movedRootTooth1*R,t);
+
 
 save('movedRootTooth2.mat', 'movedRootTooth2');
 OBJwriteVertices('第二次旋转平移后的带根标准牙.obj', movedRootTooth2);

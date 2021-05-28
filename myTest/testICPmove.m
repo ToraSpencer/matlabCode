@@ -33,6 +33,14 @@ point1 = point1(row,:);
 
   iter = 1;
   
+    % for output
+    OBJwriteVertices('point1.obj', point1);
+    OBJwriteVertices('point2.obj', point2);
+
+    % for debug
+    result = knnsearch(KDTA, point2, 'K', 1);       % 列向量， 
+
+ 
 %%
   while true
     prev_R = R;
@@ -43,9 +51,9 @@ point1 = point1(row,:);
     IB = randperm(size(point1,1));
     IB = IB(1:max_samples);
 
-    KAB = knnsearch(KDTA,BRt(IB,:),'K',1);
-    
-    KBA = knnsearch(KDTB,bsxfun(@minus,point1(IA,:),t)*R','K',1);
+    temp = BRt(IB,:);                       % 397个顶点坐标   
+    KAB = knnsearch(KDTA,temp,'K',1);       % 列向量， 
+    KBA = knnsearch(KDTB, bsxfun(@minus,point1(IA,:),t)*R', 'K', 1);
 
     vers1 = [point1(KAB,:);point1(IA,:)];
     vers2 = [point2(IB,:);point2(KBA,:)];
@@ -55,7 +63,6 @@ point1 = point1(row,:);
     centerMat2 = repmat(center2, size(vers2, 1),1);
     S = (vers2 - centerMat2)'*(vers1 - centerMat1);
     
- 
       [su,~,sv] = svd(S');     %奇异值分解
         R = sv*su';
       if( det(R) < 0 )
