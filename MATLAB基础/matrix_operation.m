@@ -90,6 +90,18 @@ disp(D * inv(P) * L * U * inv(Q) );
 disp(D);
 
 
+%% 奇异值分解——svd()
+clc;
+clear all;
+
+%       [U,S,V] = svd(A) 执行矩阵 A 的奇异值分解，因此 A = U*S*V'，其中S是对角矩阵，元素为A的奇异值。
+A = [1 0 1; -1 -2 0; 0 1 -1];
+[U,S,V] = svd(A); 
+disp(U);
+disp(S);
+disp(V);
+
+%       s = svd(A) 以降序顺序返回矩阵 A 的奇异值。
 
 %% 稀疏矩阵
 

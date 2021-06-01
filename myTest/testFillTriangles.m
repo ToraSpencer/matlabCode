@@ -47,103 +47,106 @@ end
 
 
 
-%% 2.
+% 2.
+firstVerIdx = newRootEdges(:,1);
  
-% firstVerIdx = newRootEdges(:,1);
-%  
-% secondVerIdx = newRootEdges(:,2);
-%  
-% middle = (allVers(firstVerIdx, :) + allVers(secondVerIdx, :))/2.0;
-% 
-% tempK = createns(allVers(patientEdgeVersIdx,:),'nsmethod','kdtree');
-% nearestIdx = knnsearch(tempK, middle, 'K', 1); 
-% addTris = [newRootEdges, patientEdgeVersIdx(nearestIdx)];
+secondVerIdx = newRootEdges(:,2);
+ 
+middle = (allVers(firstVerIdx, :) + allVers(secondVerIdx, :))/2.0;      % 牙根边缘边的中点
+
+pEdgeVers = allVers(patientEdgeVersIdx,:);
+tempK = createns(pEdgeVers,'nsmethod','kdtree');
+nearestIdx = knnsearch(tempK, middle, 'K', 1);                      % 找出病人牙冠边缘点中距离每个中点最近的点的索引。
+addTris = [newRootEdges, patientEdgeVersIdx(nearestIdx)];       % 牙根边缘边两端点和最近点组成了一个新的三角片。
 
  
-
-%% 2.
-addTris = [];           % 补的三角片
-
-tempMiddle = [];
-for j = 1:length(newRootEdges)
-    p1 = allVers(newRootEdges(j,1),:);      % 牙根边缘第j条边第一个点
-    p2 = allVers(newRootEdges(j,2),:);      % 
-
-    middle = (p1 + p2)/2;    
-    tempMiddle = [tempMiddle; middle];
-    [~,nearestIdx] = mindis(allVers(patientEdgeVersIdx,:), middle, 1);
-    minDisIdx(j) = nearestIdx;              % 牙根边缘中，距离第j条边中点最近的点的索引。
-    newTri = [newRootEdges(j,:), patientEdgeVersIdx(nearestIdx)];
-    addTris = [addTris; newTri];    % 找出的最近点所在的边的两端点，和当前的边的前一个端点构成了一个补的三角片。
-end
-
+ 
 
 %% 3
-if minDisIdx(1) < length(patientEdge)/2    % hit
-    for j = 1:length(minDisIdx)-1
+if nearestIdx(1) < length(patientEdge)/2    % hit
+    for j = 1:length(nearestIdx)-1
         
-        if minDisIdx(j) ~= minDisIdx(j+1) 
-            % minDisIdx(j)~minDisIdx(j+1)的所有牙冠边缘边和牙根边缘上的点newRootEdges(j,2)组成新三角片。
-            temp = repmat(newRootEdges(j,2), minDisIdx(j+1)-minDisIdx(j), 1);
-            newTri = [patientEdge(minDisIdx(j): minDisIdx(j+1)-1, :), temp];
+        if nearestIdx(j) ~= nearestIdx(j+1) 
+            % nearestIdx(j)~nearestIdx(j+1)的所有牙冠边缘边和牙根边缘上的点newRootEdges(j,2)组成新三角片。
+            temp1 = repmat(newRootEdges(j,2), nearestIdx(j+1)-nearestIdx(j), 1);
+            tempa = nearestIdx(j);
+            tempb = nearestIdx(j+1)-1;
+            vecIdx = tempa:tempb;
+            newTri = [patientEdge(vecIdx, :), temp1];
             addTris = [addTris; newTri];
+            disp(vecIdx);
         end
     end
+    
+    lastIdx = nearestIdx(end);
 
-    if minDisIdx(end)==length(patientEdge)
-        newTri = [patientEdge(minDisIdx(end),:),newRootEdges(1,1)];
+    if lastIdx==length(patientEdge)
+        newTri = [patientEdge(lastIdx,:),newRootEdges(1,1)];
         addTris = [addTris; newTri];
         
-        if minDisIdx(1)~=1
-            newTri = [patientEdge(1:minDisIdx(1),:),repmat(newRootEdges(1,1),minDisIdx(1),1)];
+        if nearestIdx(1)~=1
+            newTri = [patientEdge(1:nearestIdx(1),:),repmat(newRootEdges(1,1),nearestIdx(1),1)];
             addTris = [addTris; newTri];
         end
 
-    elseif minDisIdx(end) > length(patientEdge)/2 && minDisIdx(end)<length(patientEdge)
-        newTri = [patientEdge(minDisIdx(end):length(patientEdge),:),repmat(newRootEdges(1,1),length(patientEdge)-minDisIdx(end),1)];
+    elseif lastIdx > length(patientEdge)/2 && lastIdx<length(patientEdge)      
+        newTri = [patientEdge(lastIdx:length(patientEdge),:),repmat(newRootEdges(1,1),length(patientEdge)-lastIdx,1)];
         addTris = [addTris; newTri];
 
-        if minDisIdx(1)~=1
-            addTris = [addTris;[patientEdge(1:minDisIdx(1),:),repmat(newRootEdges(1,1),minDisIdx(1),1)]];
+        if nearestIdx(1)~=1
+            addTris = [addTris;[patientEdge(1:nearestIdx(1),:),repmat(newRootEdges(1,1),nearestIdx(1),1)]];
         end
 
-    elseif  minDisIdx(end) < length(patientEdge)/2 && minDisIdx(1)~=1
-
-       s = find(minDisIdx > length(patientEdge)/2);
-       addTris = [addTris;[patientEdge(minDisIdx(s(end)):length(patientEdge),:),repmat(newRootEdges(s(end),2),length(patientEdge)-minDisIdx(s(end))+1,1)]];
-       addTris = [addTris;[patientEdge(1:minDisIdx(end),:),repmat(newRootEdges(s(end),2),minDisIdx(end),1)]]; 
-       addTris = [addTris;[patientEdge(minDisIdx(end):minDisIdx(1)-1,:),repmat(newRootEdges(1,1),minDisIdx(1)-minDisIdx(end),1)]]; 
+    elseif  lastIdx < length(patientEdge)/2 && nearestIdx(1)~=1      % hit
+       plen = length(patientEdge);
+       vecIdx = find(nearestIdx > plen/2);
+       temp3 = vecIdx(end);
+       temp4 = nearestIdx(temp3);
+       temp1 = patientEdge(temp4: plen, :);
+       temp2 = repmat(newRootEdges(temp3, 2), plen - temp4+1, 1);
+       temp = [temp1,temp2];
+       addTris = [addTris; temp];
+       
+       temp1 = patientEdge(1: lastIdx,:);
+       temp2 = repmat(newRootEdges(temp3,2), lastIdx,1);
+       temp = [temp1,temp2];
+       addTris = [addTris; temp]; 
+       
+       
+       temp1 = patientEdge(lastIdx: nearestIdx(1)-1,:);
+       temp2 = repmat(newRootEdges(1,1),nearestIdx(1)-lastIdx,1);
+       temp = [temp1, temp2];
+       addTris = [addTris;temp]; 
     end
 
 else  % pass
-   s = find(minDisIdx < length(patientEdge)/2);
-   for j = s(1):length(minDisIdx)-1
-        if minDisIdx(j) ~= minDisIdx(j+1) 
-            newTri = [patientEdge(minDisIdx(j):minDisIdx(j+1)-1,:), repmat(newRootEdges(j,2), minDisIdx(j+1)-minDisIdx(j),1)];
+   vecIdx = find(nearestIdx < length(patientEdge)/2);
+   for j = vecIdx(1):length(nearestIdx)-1
+        if nearestIdx(j) ~= nearestIdx(j+1) 
+            newTri = [patientEdge(nearestIdx(j):nearestIdx(j+1)-1,:), repmat(newRootEdges(j,2), nearestIdx(j+1)-nearestIdx(j),1)];
             addTris = [addTris; newTri];   
         end
 
    end 
 
-   if s(1)>2
-        for j = 1:s(1)-2
-             if minDisIdx(j) ~= minDisIdx(j+1) 
-                addTris = [addTris;[patientEdge(minDisIdx(j):minDisIdx(j+1)-1,:),repmat(newRootEdges(j,2),minDisIdx(j+1)-minDisIdx(j),1)]];   
+   if vecIdx(1)>2
+        for j = 1:vecIdx(1)-2
+             if nearestIdx(j) ~= nearestIdx(j+1) 
+                addTris = [addTris;[patientEdge(nearestIdx(j):nearestIdx(j+1)-1,:),repmat(newRootEdges(j,2),nearestIdx(j+1)-nearestIdx(j),1)]];   
              end
         end
    end
 
-   if minDisIdx(end) < minDisIdx(1) 
-      addTris = [addTris;[patientEdge(minDisIdx(end):minDisIdx(1)-1,:),repmat(newRootEdges(end,2),minDisIdx(1)-minDisIdx(end),1)]];
+   if lastIdx < nearestIdx(1) 
+      addTris = [addTris;[patientEdge(lastIdx:nearestIdx(1)-1,:),repmat(newRootEdges(end,2),nearestIdx(1)-lastIdx,1)]];
    end
 
-   if minDisIdx(s(1)-1) <= length(patientEdge)
-         addTris = [addTris;[patientEdge(minDisIdx(s(1)-1):length(patientEdge),:),repmat(newRootEdges(s(1)-1,2),length(patientEdge)-minDisIdx(s(1)-1)+1,1)]];
+   if nearestIdx(vecIdx(1)-1) <= length(patientEdge)
+         addTris = [addTris;[patientEdge(nearestIdx(vecIdx(1)-1):length(patientEdge),:),repmat(newRootEdges(vecIdx(1)-1,2),length(patientEdge)-nearestIdx(vecIdx(1)-1)+1,1)]];
    end
 
-   addTris = [addTris;[patientEdge(1:minDisIdx(s(1))-1,:),repmat(newRootEdges(s(1),1),minDisIdx(s(1))-1,1)]];
+   addTris = [addTris;[patientEdge(1:nearestIdx(vecIdx(1))-1,:),repmat(newRootEdges(vecIdx(1),1),nearestIdx(vecIdx(1))-1,1)]];
 end
-
 
 
 newTris = [allTris; addTris];

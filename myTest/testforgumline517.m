@@ -1,4 +1,4 @@
-clc
+clc;
 clear all
 functionname='testforgumline517.m'; functiondir=which(functionname);
 functiondir=functiondir(1:end-length(functionname));
@@ -118,8 +118,8 @@ for j = 1:length(cutPatientCrownVers)
     patientCutTris(sub2ind(size(patientCutTris), index)) = j;
 end
 
-    
-
+     
+writeOBJ('切割后的病人牙齿网格.obj', cutPatientCrownVers, patientCutTris)
 %%
 % 2. 对齐——利用标准牙和病人牙齿的中心点以及三轴进行对齐
 
@@ -245,6 +245,8 @@ save('allVers.mat', 'allVers');
 save('allTris.mat', 'allTris');
 save('rootEdgeVers.mat', 'rootEdgeVers');
 save('bdryEdges_newRep.mat', 'bdryEdges_newRep');
+writeOBJ('补三角片前的合并网格.obj', allVers, allTris);
+
 %% 4. 合并网格补三角片
 
 %5.20更新
@@ -341,7 +343,8 @@ end
 
 newTris = [allTris; addTris];
 
-
+writeOBJ('变形前的合并网格.obj', allVers, newTris);
+OBJwriteVertices('centerPatient.obj', centerPatient);
 
 %% 5  变形控制部分
 index_crown_change = find(patientTooth.vertex(:,2)>(centerPatient(2) - (patientYdir(1)*(patientTooth.vertex(:,1) - p_patient(1))+patientYdir(3)*(patientTooth.vertex(:,3) - p_patient(3)))/patientYdir(2))-1 ...
@@ -356,15 +359,15 @@ index_tooth_change =  find(mergedToothVers(:,2)>(centerPatient(2) - ( patientYdi
     - p_patient(1))+ patientYdir(3)*(mergedToothVers(:,3) - p_patient(3)))/ patientYdir(2))+1);
 mergeRegionVers = mergedToothVers(index_tooth_change,:);
 
-%病人牙冠部分多截一部分出来，用以确定标准牙根变形后点的位置，找到movedRootTooth2中离crownforchange中最近点的位置，并将这些点变为新的点，即牙冠点的位置
+% 病人牙冠部分多截一部分出来，用以确定标准牙根变形后点的位置，找到movedRootTooth2中离crownforchange中最近点的位置，并将这些点变为新的点，即牙冠点的位置
 indices = 1:size(mergedToothVers,1);
 
-%不变形的网格
+% 合并网格中，不需要参与变形的顶点的索引，是一个行向量。
 exterior = indices(mergedToothVers(:,2)<(p_patient(2) - ( patientYdir(1)*(mergedToothVers(:,1) ...
     - p_patient(1))+ patientYdir(3)*(mergedToothVers(:,3) - p_patient(3)))/ patientYdir(2))-0.6...
     |mergedToothVers(:,2)>=(p_patient(2) - ( patientYdir(1)*(mergedToothVers(:,1) ...
     - p_patient(1))+ patientYdir(3)*(mergedToothVers(:,3) - p_patient(3)))/ patientYdir(2))+3);
-
+ 
 
 %% 6. 变形
 [omega, N0, N1, N2, outside_region_of_interest] = layers_from_handle(size(mergedToothVers,1), newTris, exterior);
