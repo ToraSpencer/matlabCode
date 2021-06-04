@@ -29,7 +29,7 @@ load('trfromtoothtocrown.mat');
 %%  1.切割病人牙冠
 
 %       1.1 取所有数据
-x = 11;             % 取11号牙来测试
+x = 12;             % 取11号牙来测试
 for i = 1:28
     if  dentalwithtooth1(i).ID == x
         rootTooth = dentalwithtooth1(i);
@@ -50,9 +50,9 @@ end
 s = fix(x/10);  %取整
 g = mod(x,10);%取余
  
-temp = Read_Obj('带牙根标准牙.obj');      % 原数据三角片反了，这个是自己修正的。
-rootTooth.vertices = temp.vertex;
-rootTooth.faces = temp.face;
+% temp = Read_Obj('带牙根标准牙.obj');      % 原数据三角片反了，这个是自己修正的。
+% rootTooth.vertices = temp.vertex;
+% rootTooth.faces = temp.face;
 
 fdi = textread('FDIUpper__.dxt');
 toothIdx = find (fdi == x);
@@ -64,6 +64,13 @@ gumline =  ReadObj(namestr2);
 axis = ReadObj('AXISUpper_.obj');
 axisPatient = axis(3*(toothIdx-1)+1:3*toothIdx,:);
 crownTooth = crown.model;          % 标准牙冠
+
+
+axisStandardVers = [axisStandard.x; axisStandard.y; axisStandard.z];
+OBJwriteVertices('axisPatient.obj', axisPatient);
+OBJwriteVertices('axisStandard.obj', axisStandardVers);
+OBJwriteVertices('gumline.obj', gumline);
+writeOBJ('crownTooth.obj',crownTooth.vertex, crownTooth.face);
 
 
 %      1.2 确定病人牙冠切割顶点。
@@ -89,6 +96,7 @@ save('patientTooth.mat', 'patientTooth');
 save('triIdxInCutPatient.mat', 'triIdxInCutPatient');
 
 
+
 %找边界
 trisInCutPatient = patientTooth.face(triIdxInCutPatient,:);
 [raw_edges_list] = query_edges_list(trisInCutPatient,'sorted');
@@ -104,13 +112,13 @@ edgeVerIdx = unique([bdryEdges(:,1); bdryEdges(:,2)]);      % 点索引向量，边界中
 [~,tempRowIdx,~] = intersect(cutPatientIdx, edgeVerIdx);
 
 %           老索引——原病人网格中的点索引； 新索引——切割之后的病人网格中的点索引；
-bdryEdges_newRep = zeros(size(bdryEdges));       % 用新索引表示的边界边。
+patientBdryEdges_newRep = zeros(size(bdryEdges));       % 用新索引表示的边界边。
 for i = 1:length(tempRowIdx)
     index = find(bdryEdges == edgeVerIdx(i));
-    bdryEdges_newRep(index) = tempRowIdx(i);
+    patientBdryEdges_newRep(index) = tempRowIdx(i);
 end
 
-patientEdge = sotr_edge(bdryEdges_newRep,1);  % 排序后的病人切割牙冠边界点,新索引。从上到下排成(a, b);(b, c);(c, d);(d, e)。。的形式
+patientEdge = sotr_edge(patientBdryEdges_newRep,1);  % 排序后的病人切割牙冠边界点,新索引。从上到下排成(a, b);(b, c);(c, d);(d, e)。。的形式
 patientCutTris = ones(size(trisInCutPatient)); % 新索引表示的病人切割网格的三角片。
 
 for j = 1:length(cutPatientCrownVers)       
@@ -168,8 +176,8 @@ save('point2.mat','point2');
 
 %       2.4 icp计算
 for i = 1:length(point2)
-   [minValue,r]=mindis(point1,point2(i,:),1);
-   row(i) = r;
+   [minValue,startEdgeIdx]=mindis(point1,point2(i,:),1);
+   row(i) = startEdgeIdx;
 end
 
 point1 = point1(row,:);
@@ -244,45 +252,70 @@ save('patientEdge.mat', 'patientEdge');
 save('allVers.mat', 'allVers');
 save('allTris.mat', 'allTris');
 save('rootEdgeVers.mat', 'rootEdgeVers');
-save('bdryEdges_newRep.mat', 'bdryEdges_newRep');
+
 writeOBJ('补三角片前的合并网格.obj', allVers, allTris);
+OBJwriteVertices('切割牙根顶点.obj', rootCutVers);
+writeOBJ('切割牙根网格.obj', rootCutVers, trisInCutRoot);
+
 
 %% 4. 合并网格补三角片
 
 %5.20更新
 %1.所有的边界点按照一个方向排序
-[~,r] = mindis(allVers(rootBdryEdges_newRep(:,1),:), allVers(bdryEdges_newRep(1,1),:), 1); 
+re1 = patientEdge(1,1);                             % 病人牙冠边缘点第一个点的索引。
+rp11 = allVers(re1,:);
+rbeVersIdx = rootBdryEdges_newRep(:,1);                         % 牙根边缘点的索引
+[~,startEdgeIdx] = mindis(allVers(rbeVersIdx,:), rp11, 1);       % 牙根边缘点中距离牙冠边缘第一个点最近点的索引。
 
 % 判断[edg_b(1,：),Edge_t(r,1)]de 方向与[Edge_t(r,：),edg_b(1,1)]的方向是否相同
 % 为了防止个别特殊情况，找Edge_t(r,1)后面的第二个点
-[r2,r3] = ind2sub(size(rootBdryEdges_newRep),find(rootBdryEdges_newRep == rootBdryEdges_newRep(r,2)));
-rr = r2(ismember(r2,r)==0);
-rm = r3(ismember(r2,r)==0);
-tri11 = allVers(patientEdge(3,1),:) - allVers(patientEdge(1,1),:);
-tri12 = allVers(rootBdryEdges_newRep(r,1),:) - allVers(patientEdge(3,1),:);
-tri21 = allVers(rootBdryEdges_newRep(rr,3-rm),:) - allVers(rootBdryEdges_newRep(r,1),:);
-tri22 = allVers(patientEdge(1,1),:) - allVers(rootBdryEdges_newRep(rr,3-rm),:);
-s_b = sign(dot(allVers(patientEdge(1,1),:) -mean(rootEdgeVers),cross(tri11,tri12)));
-s_t = sign(dot(allVers(rootBdryEdges_newRep(r,1),:) - mean(rootEdgeVers),cross(tri21,tri22)));
+afterStartIdx = rootBdryEdges_newRep(startEdgeIdx,2);       % 起始边的后顶点的索引。
+[row1,col1] = ind2sub(size(rootBdryEdges_newRep),find(rootBdryEdges_newRep == afterStartIdx));     
 
-if s_b ~= s_t   % hit
-    edg_t = sotr_edge(rootBdryEdges_newRep, r);
-else
+rr = row1(ismember(row1,startEdgeIdx)==0);      % row1两个元素中不等于startIdx中的那个
+rm = col1(ismember(row1,startEdgeIdx)==0);      % 1或者2，上面选取的索引对应的位置。
+
+pe3 = patientEdge(3,1);
+pe1 = patientEdge(1,1);
+pp1 = allVers(pe1,:);
+pp3 = allVers(pe3,:) ;
+rp1 = allVers(rootBdryEdges_newRep(startEdgeIdx,1),:);
+rp3 = allVers(rootBdryEdges_newRep(rr,3-rm),:);
+rCenter = mean(rootEdgeVers);
+
+tri11 = pp3 - pp1;
+tri12 = rp1 - pp3;
+tri21 = rp3 - rp1;
+tri22 = pp1 - rp3;
+
+s_b = dot(pp1 - rCenter, cross(tri11,tri12));
+s_t = dot(rp1 - rCenter, cross(tri21,tri22));
+
+if s_b * s_t <= 0   % 11hit  不同号 
+    edg_t = sotr_edge(rootBdryEdges_newRep, startEdgeIdx);
+else            % 12hit
     E_t = [rootBdryEdges_newRep(:,2),rootBdryEdges_newRep(:,1)];
-    edg_t = sotr_edge(E_t,r);
+    edg_t = sotr_edge(E_t,startEdgeIdx);
 end
 
-addTris = [];
-for j = 1:length(edg_t)
-    p1 = allVers(edg_t(j,1),:);
-    p2 = allVers(edg_t(j,2),:);
 
-    [~,ro]=mindis(allVers(patientEdge(:,1),:),(p1+p2)/2,1);
+%   4.2 
+addTris = [];
+middle = [];
+for j = 1:length(edg_t)
+    pe1 = allVers(edg_t(j,1),:);
+    p2 = allVers(edg_t(j,2),:);
+    middle(j, :) = (pe1+p2)/2;
+    [~,ro]=mindis(allVers(patientEdge(:,1),:),(pe1+p2)/2,1);
     roww(j) = ro;
     addTris = [addTris;[edg_t(j,:),patientEdge(ro,1)]];
 end
 
-if roww(1)<length(patientEdge)/2    % hit
+OBJwriteVertices('middle.obj',middle);
+
+
+%   4.3. 
+if roww(1)<length(patientEdge)/2    % 11hit
 
     for j = 1:length(roww)-1
         if roww(j) ~= roww(j+1) 
@@ -312,32 +345,41 @@ if roww(1)<length(patientEdge)/2    % hit
        addTris = [addTris;[patientEdge(roww(end):roww(1)-1,:),repmat(edg_t(1,1),roww(1)-roww(end),1)]]; 
     end
 
-else
-   s = find(roww<length(patientEdge)/2);
-   for j = s(1):length(roww)-1
+else       %12hit
+   s = find(roww < length(patientEdge)/2);      
+   start = s(1);            % roww中第一个满足小于length(patientEdge)/2的索引；
+   
+   for j = start:length(roww)-1
         if roww(j) ~= roww(j+1) 
-            addTris = [addTris;[patientEdge(roww(j):roww(j+1)-1,:),repmat(edg_t(j,2),roww(j+1)-roww(j),1)]];   
+            temp11 = roww(j):(roww(j+1)-1);
+            temp1 = patientEdge(temp11,:);
+            temp2 = repmat(edg_t(j,2),roww(j+1)-roww(j),1);
+            temp = [temp1, temp2];
+            addTris = [addTris; temp];   
         end
-
    end 
 
-   if s(1)>2
-        for j = 1:s(1)-2
+   if start>2     % 12hit
+        for j = 1:start-2           %1~4
              if roww(j) ~= roww(j+1) 
-                addTris = [addTris;[patientEdge(roww(j):roww(j+1)-1,:),repmat(edg_t(j,2),roww(j+1)-roww(j),1)]];   
+                 temp11 = roww(j):roww(j+1)-1;
+                 temp1 = patientEdge(temp11,:);
+                 temp2 = repmat(edg_t(j,2),roww(j+1)-roww(j),1);
+                 temp = [temp1,temp2];
+                addTris = [addTris;temp];   
              end
         end
    end
 
-   if roww(end)<roww(1) 
+   if roww(end)<roww(1) % 12hit
       addTris = [addTris;[patientEdge(roww(end):roww(1)-1,:),repmat(edg_t(end,2),roww(1)-roww(end),1)]];
    end
 
-   if roww(s(1)-1)<=length(patientEdge)
-         addTris = [addTris;[patientEdge(roww(s(1)-1):length(patientEdge),:),repmat(edg_t(s(1)-1,2),length(patientEdge)-roww(s(1)-1)+1,1)]];
+   if roww(start-1)<=length(patientEdge)    %12hit
+         addTris = [addTris;[patientEdge(roww(start-1):length(patientEdge),:),repmat(edg_t(start-1,2),length(patientEdge)-roww(start-1)+1,1)]];
    end
 
-   addTris = [addTris;[patientEdge(1:roww(s(1))-1,:),repmat(edg_t(s(1),1),roww(s(1))-1,1)]];
+   addTris = [addTris;[patientEdge(1:roww(start)-1,:),repmat(edg_t(start,1),roww(start)-1,1)]];
 
 end
 
@@ -353,11 +395,11 @@ patientTransform = patientTooth.vertex(index_crown_change,:);
 
 %牙冠牙根分别形成网格
 mergedToothVers = allVers;
-index_tooth_change =  find(mergedToothVers(:,2)>(centerPatient(2) - ( patientYdir(1)*(mergedToothVers(:,1) ...
+mergeRegionIdx =  find(mergedToothVers(:,2)>(centerPatient(2) - ( patientYdir(1)*(mergedToothVers(:,1) ...
     - p_patient(1))+ patientYdir(3)*(mergedToothVers(:,3) - p_patient(3)))/ patientYdir(2))-1 ...
     &mergedToothVers(:,2)<=(p_patient(2) - ( patientYdir(1)*(mergedToothVers(:,1) ...
     - p_patient(1))+ patientYdir(3)*(mergedToothVers(:,3) - p_patient(3)))/ patientYdir(2))+1);
-mergeRegionVers = mergedToothVers(index_tooth_change,:);
+mergeRegionVers = mergedToothVers(mergeRegionIdx,:);
 
 % 病人牙冠部分多截一部分出来，用以确定标准牙根变形后点的位置，找到movedRootTooth2中离crownforchange中最近点的位置，并将这些点变为新的点，即牙冠点的位置
 indices = 1:size(mergedToothVers,1);
@@ -368,6 +410,13 @@ exterior = indices(mergedToothVers(:,2)<(p_patient(2) - ( patientYdir(1)*(merged
     |mergedToothVers(:,2)>=(p_patient(2) - ( patientYdir(1)*(mergedToothVers(:,1) ...
     - p_patient(1))+ patientYdir(3)*(mergedToothVers(:,3) - p_patient(3)))/ patientYdir(2))+3);
  
+OBJwriteVertices('mergeRegionVers.obj', mergeRegionVers);
+OBJwriteVertices('patientTransform.obj', patientTransform);
+exteriorVers = mergedToothVers(exterior, :);
+OBJwriteVertices('exteriorVers.obj', exteriorVers);
+
+temp = exterior';
+ 
 
 %% 6. 变形
 [omega, N0, N1, N2, outside_region_of_interest] = layers_from_handle(size(mergedToothVers,1), newTris, exterior);
@@ -376,11 +425,12 @@ exterior = indices(mergedToothVers(:,2)<(p_patient(2) - ( patientYdir(1)*(merged
 %找到牙根部分跟牙冠变形部分最近的点，将牙根上的点拉至牙冠处
 finalVers = mergedToothVers;
 for i = 1:length(mergeRegionVers)
-   [minValue,r]=mindis(patientTransform,mergeRegionVers(i,:),1);
-   minvalue(i) = minValue;  row(i) = r;
-   finalVers(index_tooth_change(i),:) = patientTransform(r,:);
+   [minValue,startEdgeIdx]=mindis(patientTransform, mergeRegionVers(i,:),1);
+   minvalue(i) = minValue;  row(i) = startEdgeIdx;
+   finalVers(mergeRegionIdx(i),:) = patientTransform(startEdgeIdx,:);
 end
 
+ 
 BZ1 = zeros(size(mergedToothVers,1),3);
 finalVers = biharm_solve_with_factor( ...
     bi_L, bi_U, bi_P, bi_Q, bi_R, bi_S, bi_M, ...
