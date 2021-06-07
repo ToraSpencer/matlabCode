@@ -182,12 +182,7 @@ if s ==1 || s ==2
         lone_edges_list_t = unique(raw_edges_list_t(lone_edges_idx_vect_t,:),'rows');
         
         Edge_t = zeros(size(lone_edges_list_t));
-%         plot_edges(tooth_T,lone_edges_list_t,'r','LineWidth',2);
-       
-        figure()
-        trisurf(f_bingren(c2,:),v_bingren(:,1),v_bingren(:,2),v_bingren(:,3),'facecolor','c','edgecolor','b')
-        hold on
-        trisurf(f(c_t2,:),tooth_T(:,1),tooth_T(:,2),tooth_T(:,3),'facecolor','c','edgecolor','b')
+ 
         ff_t = f(c_t2,:);
         f_t0 = ones (size(ff_t));
         for j = 1:length(tooth)
@@ -195,12 +190,7 @@ if s ==1 || s ==2
             f_t0(sub2ind(size(f_t0), nu)) = j+length(point_bingren);
         end
         f_end = [f_b0;f_t0];v_end = [point_bingren;tooth];
-%         Edge_b = sortrows(Edge_b,1);
-%         figure()
-%         for i = 1:length(edg_b)
-%             plot_edges(v_end,edg_b(i,:),'r','LineWidth',2);
-%             hold on
-%         end
+ 
         
 
         
@@ -246,12 +236,9 @@ if s ==1 || s ==2
 
             [~,ro]=mindis(v_end(edg_b(:,1),:),(p1+p2)/2,1);
             roww(j) = ro;
-%             rr = edg_t(j,:);
-%             rr = [find(index_tooth == lone_edges_list_t(j,1))+length(point_bingren) find(index_tooth == lone_edges_list_t(j,2))+length(point_bingren)];
-%             dt = [dt;[rr,edge_p_b_local(ro)]];
+ 
             dt = [dt;[edg_t(j,:),edg_b(ro,1)]];
-%             trisurf(dt(j,:),v_end(:,1),v_end(:,2),v_end(:,3),'facecolor','c','edgecolor','b')
-            
+   
         end
         if roww(1)<length(edg_b)/2
             for j = 1:length(roww)-1
@@ -608,8 +595,6 @@ else
 end
     
     
-    
-
 
 [Omega, N0, N1, N2, outside_region_of_interest] = layers_from_handle(size(p_T,1), ff, exterior);
 [bi_L,bi_U,bi_P,bi_Q,bi_R,bi_S,bi_M] = biharm_factor_system(p,ff, bi_bndtype,masstype,reduction,Omega,N0,N1);
@@ -625,5 +610,6 @@ bi_V = biharm_solve_with_factor( ...
 figure()
 trisurf(ff,bi_V(:,1),bi_V(:,2),bi_V(:,3),'facecolor','c','edgecolor','b')
 % axis image
-namestr3 = [num2str(x),'.','obj'];
-writeOBJ(namestr3,bi_V,ff)
+ 
+writeOBJ('×îÖÕÍø¸ñ.obj',bi_V, ff)
+ 
