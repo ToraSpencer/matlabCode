@@ -123,36 +123,35 @@ writeOBJ('rootTooth.obj',rootTooth.vertices, rootTooth.faces);
 writeOBJ('切割后的病人牙齿网格.obj', cutPatientCrownVers, patientCutTris)
 
  
-%%
-% 2. 对齐——利用标准牙和病人牙齿的中心点以及三轴进行对齐
+%% 2. 对齐——利用标准牙和病人牙齿的中心点以及三轴进行对齐
 
 %  2.1 确定第一次旋转平移所需参数
         centerCrown = mean(crownTooth.vertex);
         rootYdir = axisStandard.y;
-        index_crown_biaozhun = find(crownTooth.vertex(:,2)<=(centerCrown(2) - (rootYdir(1)*(crownTooth.vertex(:,1) ...
+        tempCrownIdx = find(crownTooth.vertex(:,2)<=(centerCrown(2) - (rootYdir(1)*(crownTooth.vertex(:,1) ...
                     - centerCrown(1))+rootYdir(3)*(crownTooth.vertex(:,3) - centerCrown(3)))/rootYdir(2)));
-        v_crown_biaozhun = abs(centerCrown(2) - (rootYdir(1)*(crownTooth.vertex(index_crown_biaozhun,1)-centerCrown(1))...
-                     +rootYdir(3)*(crownTooth.vertex(index_crown_biaozhun,3)-centerCrown(3)))/rootYdir(2));
-        in_crown = find(v_crown_biaozhun == max(v_crown_biaozhun));
-        point_crown =  crownTooth.vertex(index_crown_biaozhun(in_crown),:);
+        crownValue = abs(centerCrown(2) - (rootYdir(1)*(crownTooth.vertex(tempCrownIdx,1)-centerCrown(1))...
+                     +rootYdir(3)*(crownTooth.vertex(tempCrownIdx,3)-centerCrown(3)))/rootYdir(2));
+        maxIdx = find(crownValue == max(crownValue));
+        point_crown =  crownTooth.vertex(tempCrownIdx(maxIdx),:);
 
         %标准牙根
-        rootTooth.vertices = rootTooth.vertices;
-        p_tooth_biaozhun = mean(rootTooth.vertices);
-        index_tooth_biaozhun = find(rootTooth.vertices(:,2)<=(p_tooth_biaozhun(2) - (rootYdir(1)*(rootTooth.vertices(:,1) ...
-                         - p_tooth_biaozhun(1))+rootYdir(3)*(rootTooth.vertices(:,3) - p_tooth_biaozhun(3)))/rootYdir(2)));
-        vz_tooth = abs(p_tooth_biaozhun(2) - (rootYdir(1)*(rootTooth.vertices(index_tooth_biaozhun,1)-p_tooth_biaozhun(1))...
-                   +rootYdir(3)*(rootTooth.vertices(index_tooth_biaozhun,3)-p_tooth_biaozhun(3)))/rootYdir(2));
-        in_tooth = find(vz_tooth == max(vz_tooth));
-        point_tooth = rootTooth.vertices(index_tooth_biaozhun(in_tooth),:);
+        centerRoot = mean(rootTooth.vertices);
+        tempRootIdx = find(rootTooth.vertices(:,2)<=(centerRoot(2) - (rootYdir(1)*(rootTooth.vertices(:,1) ...
+                         - centerRoot(1))+rootYdir(3)*(rootTooth.vertices(:,3) - centerRoot(3)))/rootYdir(2)));
+        rootValue = abs(centerRoot(2) - (rootYdir(1)*(rootTooth.vertices(tempRootIdx,1)-centerRoot(1))...
+                   +rootYdir(3)*(rootTooth.vertices(tempRootIdx,3)-centerRoot(3)))/rootYdir(2));
+        maxIdx = find(rootValue == max(rootValue));
+        point_tooth = rootTooth.vertices(tempRootIdx(maxIdx),:);
         centcrownintooth = centerCrown+point_tooth-point_crown;%切后标准根的边缘中心
         
         
         %%利用标准牙和病人牙齿的中心点以及三轴进行对齐，对齐后按照病人牙冠的切割位置进行切割
         temp = inv([axisStandard.x;axisStandard.y;axisStandard.z]);
         R = temp * axisPatient;
-        newCent = centcrownintooth*R;
-        movedRootTooth1 = (rootTooth.vertices) *R + repmat((centerPatient - newCent),length(rootTooth.vertices),1);
+        movingVec = centerPatient - centcrownintooth*R;
+        movingMat = repmat(movingVec,length(rootTooth.vertices),1);
+        movedRootTooth1 = (rootTooth.vertices) *R + movingMat;
         
         OBJwriteVertices('第一次旋转平移后的带根标准牙.obj', movedRootTooth1);
 

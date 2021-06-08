@@ -25,7 +25,7 @@ load('axisofdental_crowm');
 load('trfromtoothtocrown.mat');
  
  
-x = 41;
+x = 21;
 for i = 1:28
     if  dentalwithtooth1(i).ID == x
         rootTooth = dentalwithtooth1(i);
@@ -128,8 +128,7 @@ writeOBJ('rootTooth.obj',rootTooth.vertices, rootTooth.faces);
 writeOBJ('切割后的病人牙齿网格.obj', cutPatientCrownVers, patientCutTris)
 
 
-    
-    
+
 %% 2. 对齐——利用标准牙和病人牙齿的中心点以及三轴进行对齐
 
 %  2.1 确定第一次旋转平移所需参数
@@ -143,7 +142,6 @@ writeOBJ('切割后的病人牙齿网格.obj', cutPatientCrownVers, patientCutTris)
         point_crown =  crownTooth.vertex(tempCrownIdx(maxIdx),:);
 
         %标准牙根
-        rootTooth.vertices = rootTooth.vertices;
         centerRoot = mean(rootTooth.vertices);
         tempRootIdx = find(rootTooth.vertices(:,2)<=(centerRoot(2) - (rootYdir(1)*(rootTooth.vertices(:,1) ...
                          - centerRoot(1))+rootYdir(3)*(rootTooth.vertices(:,3) - centerRoot(3)))/rootYdir(2)));
@@ -155,9 +153,11 @@ writeOBJ('切割后的病人牙齿网格.obj', cutPatientCrownVers, patientCutTris)
         
         
         %%利用标准牙和病人牙齿的中心点以及三轴进行对齐，对齐后按照病人牙冠的切割位置进行切割
-        R = inv([axisStandard.x;axisStandard.y;axisStandard.z])*axisPatient;
-        newCent = centcrownintooth*R;
-        movedRootTooth1 = (rootTooth.vertices) *R + repmat((centerPatient - newCent),length(rootTooth.vertices),1);
+        temp = inv([axisStandard.x;axisStandard.y;axisStandard.z]);
+        R = temp * axisPatient;
+        movingVec = centerPatient - centcrownintooth*R;
+        movingMat = repmat(movingVec,length(rootTooth.vertices),1);
+        movedRootTooth1 = (rootTooth.vertices) *R + movingMat;
         
         OBJwriteVertices('第一次旋转平移后的带根标准牙.obj', movedRootTooth1);
 
@@ -188,6 +188,7 @@ writeOBJ('切割后的病人牙齿网格.obj', cutPatientCrownVers, patientCutTris)
         save('movedRootTooth2.mat', 'movedRootTooth2');
         OBJwriteVertices('第二次旋转平移后的带根标准牙.obj', movedRootTooth2);
 
+        
 
 %% 3. 切割带根标准牙  
 
@@ -381,6 +382,7 @@ end
 
 newTris = [allTris; addTris];
 
+DatWriteIdxs('addTris.dat', addTris);
 writeOBJ('变形前的合并网格.obj', allVers, newTris);
 OBJwriteVertices('centerPatient.obj', centerPatient);
 
@@ -411,7 +413,8 @@ OBJwriteVertices('patientTransform.obj', patientTransform);
 exteriorVers = mergedToothVers(exterior, :);
 OBJwriteVertices('exteriorVers.obj', exteriorVers);
 
-temp = exterior';
+DatWriteIdxs('mergeRegionIdx.dat', mergeRegionIdx);
+DatWriteIdxs('exterior.dat', exterior');
 
     end
    
@@ -436,8 +439,6 @@ writeOBJ('patientTooth.obj',patientTooth.vertex, patientTooth.face);
 writeOBJ('crownTooth.obj',crownTooth.vertex, crownTooth.face);
 writeOBJ('rootTooth.obj',rootTooth.vertices, rootTooth.faces);
 
-
-    
          %处理
         centerPatient = mean(patientTooth.vertex);y = min(gumline(:,2));
         p_patient =[centerPatient(1),y(1),centerPatient(3)];patientYdir = axisPatient(2,:);patientTooth.vertex = patientTooth.vertex;patientTooth.face = patientTooth.face;
@@ -499,7 +500,6 @@ writeOBJ('rootTooth.obj',rootTooth.vertices, rootTooth.faces);
         end
       
         maxIdx = find(crownValue == max(crownValue));
-        
         point_crown =  crownTooth.vertex(tempCrownIdx(maxIdx),:);
 
 
@@ -516,16 +516,19 @@ writeOBJ('rootTooth.obj',rootTooth.vertices, rootTooth.faces);
         
         maxIdx = find(rootValue == max(rootValue));
         valueRootMaxIdx = tempRootIdx(maxIdx);
-        point_tooth = rootTooth.vertices(valueRootMaxIdx,:);
+        point_root = rootTooth.vertices(valueRootMaxIdx,:);
 
-        rootTooth.vertices = rootTooth.vertices - repmat(point_tooth,length(rootTooth.vertices),1)+repmat(point_crown,length(rootTooth.vertices),1);
-        
         
 %       2.2 第一次旋转平移
+        movingVec = point_crown - point_root;
+        movingMat = repmat(movingVec,length(rootTooth.vertices),1);
+        movedRootTooth0 = rootTooth.vertices + movingMat;
+        
         temp = inv([axisStandard.x;axisStandard.y;axisStandard.z]);
         R = temp * axisPatient;
-        newCent = centerCrown*R;
-        movedRootTooth1 = (rootTooth.vertices) *R + repmat((centerPatient - newCent),length(rootTooth.vertices),1);
+        movingVec = centerPatient - centerCrown*R;
+        movingMat = repmat(movingVec,length(rootTooth.vertices),1);
+        movedRootTooth1 = movedRootTooth0 *R + movingMat;
  
        OBJwriteVertices('第一次旋转平移后的带根标准牙.obj', movedRootTooth1);
  
@@ -776,7 +779,9 @@ OBJwriteVertices('patientTransform.obj', patientTransform);
 exteriorVers = mergedToothVers(exterior, :);
 OBJwriteVertices('exteriorVers.obj', exteriorVers);
 
-temp = exterior';
+DatWriteIdxs('mergeRegionIdx.dat', mergeRegionIdx);
+DatWriteIdxs('exterior.dat', exterior');
+ 
 
     end
     
@@ -784,10 +789,13 @@ temp = exterior';
         
      
 end
+ 
 
 %% 6. 变形
 [omega, N0, N1, N2, outside_region_of_interest] = layers_from_handle(size(mergedToothVers,1), newTris, exterior);
-[bi_L,bi_U,bi_P,bi_Q,bi_R,bi_S,bi_M] = biharm_factor_system(mergedToothVers,newTris, 'ext','voronoi', 'no_flatten',omega,N0,N1);
+
+%[bi_L,bi_U,bi_P,bi_Q,bi_D,bi_S,bi_M] = biharm_factor_system(mergedToothVers,newTris, 'ext','voronoi', 'no_flatten',omega,N0,N1);
+[A, bi_S] =  biharm_factor_system_modified(mergedToothVers,newTris,omega,N0,N1);
 
 %找到牙根部分跟牙冠变形部分最近的点，将牙根上的点拉至牙冠处
 finalVers = mergedToothVers;
@@ -799,12 +807,17 @@ end
 
  
 BZ1 = zeros(size(mergedToothVers,1),3);
-finalVers = biharm_solve_with_factor( ...
-    bi_L, bi_U, bi_P, bi_Q, bi_R, bi_S, bi_M, ...
-    newTris, finalVers, omega, N0, N1, 'ext',  'no_flatten',BZ1,mergedToothVers);
- 
+finalVers = biharm_solve_with_factor_modified(A, bi_S, finalVers, omega, N0, N1);
  
 writeOBJ('最终网格.obj',finalVers, newTris)
+
+
+%% 7. 纠正三角片方向
+focusVers = finalVers(mergeRegionIdx, :);
+OBJwriteVertices('focusVers.obj', focusVers);
+
+focusCenter = mean(focusVers);      % 牙齿拼接处附近所有顶点的中点。
+deltaHeight = 3;
 
 
 disp('finished.');

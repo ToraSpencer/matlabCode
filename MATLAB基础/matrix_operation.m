@@ -8,6 +8,16 @@ m3 = m1*m2;
 temp1 = m3/m2;          % 右除： m1 == m3/m2 == m3 * inv(m2);
 temp2 = m1\m3;          % 左除： m2 == m1\m3 == inv(m1)*m3;
 
+%% 使用左除解线性方程组：
+% 3x+y = 1; 2x-y = 2; 
+clc;
+clear all;
+A = [3,1; 2,-1];
+b = [1;2];              % A*x = b;
+x1 = inv(A)*b;
+x2 = A\b;               % A矩阵可以是稀疏矩阵。
+disp(x1);
+disp(x2);
 
 
 %% 基本变换

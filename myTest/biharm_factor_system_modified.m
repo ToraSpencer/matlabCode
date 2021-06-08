@@ -1,4 +1,4 @@
-function [bi_L,bi_U,bi_P,bi_Q,bi_D, bi_S, bi_M] = biharm_factor_system_modified( ...
+function [A, bi_S] = biharm_factor_system_modified( ...
   mergedToothVers, ...
   newTris, ...
   omega, ...
@@ -14,7 +14,7 @@ function [bi_L,bi_U,bi_P,bi_Q,bi_D, bi_S, bi_M] = biharm_factor_system_modified(
 
   all = [N0 omega];
   
-  %bi_S = cotmatrix(mergedToothVers, newTris);  
+ 
   i1 = newTris(1,:); i2 = newTris(2,:); i3 = newTris(3,:); 
   vers1 = mergedToothVers(i3,:) - mergedToothVers(i2,:);  
   vers2 = mergedToothVers(i1,:) - mergedToothVers(i3,:); 
@@ -33,10 +33,6 @@ function [bi_L,bi_U,bi_P,bi_Q,bi_D, bi_S, bi_M] = biharm_factor_system_modified(
   bi_S = sparse(i,j,v2,size(mergedToothVers,1),size(mergedToothVers,1));
  
  
-  %bi_M = massmatrix(mergedToothVers, newTris, 'voronoi');
-  elems = nonzeros(bi_S);
-  theElem = bi_S(i(1), j(1));
-  
   ml = [ ...
     sqrt(sum((mergedToothVers(newTris(2,:),:)-mergedToothVers(newTris(3,:),:)).^2,2)) ...
     sqrt(sum((mergedToothVers(newTris(3,:),:)-mergedToothVers(newTris(1,:),:)).^2,2)) ...
@@ -44,8 +40,7 @@ function [bi_L,bi_U,bi_P,bi_Q,bi_D, bi_S, bi_M] = biharm_factor_system_modified(
     ];
  
 
- %bi_M = massmatrix_intrinsic(lalala, newTris, size(mergedToothVers,1),'voronoi');
-    
+  
     i1 = newTris(1,:); i2 = newTris(2,:); i3 = newTris(3,:); 
     
       cosines = [ ...
@@ -81,55 +76,13 @@ function [bi_L,bi_U,bi_P,bi_Q,bi_D, bi_S, bi_M] = biharm_factor_system_modified(
       v = reshape(quads,size(quads,1)*3,1);
     bi_M = sparse(i,j,v,size(mergedToothVers,1), size(mergedToothVers,1));
     
-    
-
-    
+   
   n_Omega = size(omega,2);
   Z_Omega_Omega = sparse(n_Omega, n_Omega);
   
-  temp1 = -bi_M(all,all) ;
-  temp2 = bi_S(all,omega);
-  temp3 = bi_S(omega,all);
-  temp4 = Z_Omega_Omega;
-  
-  % for debug
-  elems1 = nonzeros(temp1);
-  elems2 = nonzeros(temp2);
-  elems3 = nonzeros(temp3);
     A = [ -bi_M(all,all)      bi_S(  all,omega);   ...        % 546 X 546
          bi_S(omega,all)    Z_Omega_Omega ];     
      
 
-   save('A.mat', 'A');  
-     
-     
-  [bi_L,bi_U,bi_P,bi_Q,bi_D] = lu(A);
-  
-  
-  
-  %% for debug
-  elemsa = nonzeros(A);   
-  elemsl = nonzeros(bi_L); 
-  elemsu = nonzeros(bi_U); 
-  elemsp = nonzeros(bi_P); 
-  elemsq = nonzeros(bi_Q); 
-  elemsr = nonzeros(bi_D); 
-
-  
-  % P*(D\S)*Q = L*U
-  left = bi_P*(bi_D\A)*bi_Q;
-  right = bi_L*bi_U;
-  elemleft = nonzeros(left);
-  elemright = nonzeros(right);
-
-  
-  threshold = (elemleft > 0.001*ones(size(elemleft)));
-  elemleft = elemleft(threshold);
-  threshold = (elemright > 0.001*ones(size(elemright)));
-  elemright = elemright(threshold);
-  
-  
  
-  
- disp('finished.');
 end
