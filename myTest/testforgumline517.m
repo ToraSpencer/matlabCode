@@ -25,7 +25,8 @@ load('axisofdental_crowm');
 load('trfromtoothtocrown.mat');
  
  
-x = 21;
+x = 41;
+
 for i = 1:28
     if  dentalwithtooth1(i).ID == x
         rootTooth = dentalwithtooth1(i);
@@ -48,14 +49,15 @@ crownTooth = crown.model;          % 标准牙冠
         
 s = fix(x/10);  %取整
 g = mod(x,10);%取余
- 
 
-    fdi = textread('FDIUpper__.dxt');
-    toothIdx = find (fdi == x);
     
 if s == 1 || s == 2
-
-    if 1
+    fdi = textread('FDIUpper__.dxt');
+    toothIdx = find (fdi == x);
+    if isempty(toothIdx)
+        disp( '该病例没有此牙齿 ');
+        return;
+    else
         fdi = textread('FDIUpper__.dxt');
         toothIdx = find (fdi == x);
         namestr1 = ['toothUpper_',num2str(toothIdx-1),'.','obj'];
@@ -419,9 +421,12 @@ DatWriteIdxs('exterior.dat', exterior');
     end
    
 else
-    if(1)
     fdi = textread('FDILower__.dxt');
     toothIdx = find (fdi == x);
+    if isempty(toothIdx)
+        disp( '该病例没有此牙齿 ');
+        return;
+    else
 
 %%  1.切割病人牙冠
         namestr1 = ['toothLower_',num2str(toothIdx-1),'.','obj'];
