@@ -25,11 +25,15 @@ load('axisofdental_crowm');
 load('trfromtoothtocrown.mat');
  
  
-x = 41;
+x = 47;
 
 for i = 1:28
     if  dentalwithtooth1(i).ID == x
         rootTooth = dentalwithtooth1(i);
+        str = ['./测试数据/rootTooth', num2str(x), '.obj']; %原牙根网格中有些三角片反了，这个是纠正后的。
+        rootToothTemp = Read_Obj(str);
+        rootTooth.vertices = rootToothTemp.vertex;
+        rootTooth.faces = rootToothTemp.face;
     end
 end
  
@@ -442,7 +446,6 @@ OBJwriteVertices('axisStandard.obj', axisStandardVers);
 OBJwriteVertices('gumline.obj', gumline);
 writeOBJ('patientTooth.obj',patientTooth.vertex, patientTooth.face);
 writeOBJ('crownTooth.obj',crownTooth.vertex, crownTooth.face);
-writeOBJ('rootTooth.obj',rootTooth.vertices, rootTooth.faces);
 
          %处理
         centerPatient = mean(patientTooth.vertex);y = min(gumline(:,2));
@@ -779,14 +782,7 @@ exterior = indices(mergedToothVers(:,2)>(p_patient(2) - ( patientYdir(1)*(merged
     |mergedToothVers(:,2)<=(p_patient(2) - ( patientYdir(1)*(mergedToothVers(:,1) ...
     - p_patient(1))+ patientYdir(3)*(mergedToothVers(:,3) - p_patient(3)))/ patientYdir(2))-3);
  
-OBJwriteVertices('mergeRegionVers.obj', mergeRegionVers);
-OBJwriteVertices('patientTransform.obj', patientTransform);
-exteriorVers = mergedToothVers(exterior, :);
-OBJwriteVertices('exteriorVers.obj', exteriorVers);
 
-DatWriteIdxs('mergeRegionIdx.dat', mergeRegionIdx);
-DatWriteIdxs('exterior.dat', exterior');
- 
 
     end
     
@@ -794,6 +790,14 @@ DatWriteIdxs('exterior.dat', exterior');
         
      
 end
+
+OBJwriteVertices('mergeRegionVers.obj', mergeRegionVers);
+OBJwriteVertices('patientTransform.obj', patientTransform);
+OBJwriteVertices('mergeMeshVers.obj', allVers);
+ 
+DatWriteIdxs('mergeMeshTris.dat', newTris);
+DatWriteIdxs('mergeRegionIdx.dat', mergeRegionIdx);
+DatWriteIdxs('exterior.dat', exterior');
  
 
 %% 6. 变形
@@ -801,6 +805,10 @@ end
 
 %[bi_L,bi_U,bi_P,bi_Q,bi_D,bi_S,bi_M] = biharm_factor_system(mergedToothVers,newTris, 'ext','voronoi', 'no_flatten',omega,N0,N1);
 [A, bi_S] =  biharm_factor_system_modified(mergedToothVers,newTris,omega,N0,N1);
+
+Aelems = nonzeros(A);
+bi_Selems = nonzeros(bi_S);
+
 
 %找到牙根部分跟牙冠变形部分最近的点，将牙根上的点拉至牙冠处
 finalVers = mergedToothVers;

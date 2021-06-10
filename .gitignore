@@ -1,6 +1,12 @@
 #忽略根目录下的所有文件
 *
 
+
+blabla/
+
+
+
+
 #包含目录
 !*/
 
@@ -17,6 +23,7 @@
 !/myTest/locationLower__.dxt
 !/myTest/locationUpper__.dxt
 !/myTest/testdata(4)/*
+!/myTest/测试数据/*
 
 
 #忽略子目录下的所有文件
