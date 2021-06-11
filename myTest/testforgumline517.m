@@ -25,7 +25,7 @@ load('axisofdental_crowm');
 load('trfromtoothtocrown.mat');
  
  
-x = 47;
+x = 45;
 
 for i = 1:28
     if  dentalwithtooth1(i).ID == x
@@ -295,7 +295,7 @@ s_t = dot(rp1 - rCenter, cross(tri21,tri22));
 
 if s_b * s_t <= 0   % 11hit  不同号 
     rootEdges = sotr_edge(rootBdryEdges_newRep, startEdgeIdx);
-else            % 12hit
+else            % 12hit, 22hit
     E_t = [rootBdryEdges_newRep(:,2),rootBdryEdges_newRep(:,1)];
     rootEdges = sotr_edge(E_t,startEdgeIdx);
 end
@@ -348,7 +348,7 @@ if roww(1) < length(patientEdge)/2    % 11hit
        addTris = [addTris;[patientEdge(roww(end):roww(1)-1,:),repmat(rootEdges(1,1),roww(1)-roww(end),1)]]; 
     end
 
-else       %12hit
+else       %12hit, 22hit
     s = find(roww < length(patientEdge)/2);      
     start = s(1);            % roww中第一个满足小于length(patientEdge)/2的索引；
    
@@ -362,7 +362,7 @@ else       %12hit
         end
    end 
 
-   if start>2     % 12hit
+   if start>2     % 12hit, 22miss
         for j = 1:start-2           %1~4
              if roww(j) ~= roww(j+1) 
                  temp11 = roww(j):roww(j+1)-1;
