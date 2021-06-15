@@ -78,6 +78,8 @@ function [L,U,P,Q,R, S, M] = biharm_factor_system( ...
     A = [ -M(all,all)      S(  all,Omega);   ...
            S(Omega,all)    Z_Omega_Omega  ];     
   end
+  
+ 
 
   % factorize A
   [L,U,P,Q,R] = lu(A);

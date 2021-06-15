@@ -1,7 +1,13 @@
 clc
 clear all
 
- 
+
+%% 
+for iii = 1:4
+    for jjj = 1:7 
+        close all;
+        clearvars -EXCEPT iii jjj     
+        
 functionname='testforgumline517.m'; functiondir=which(functionname);
 functiondir=functiondir(1:end-length(functionname));
 addpath([functiondir 'trianglerayintersection'])
@@ -26,23 +32,29 @@ load('dental_crown.mat');
 load('dentalmodelwithroot0.1forlow.mat');
 load('axisofdental_crowm');
 load('trfromtoothtocrown.mat');
- 
-FDInum = 11;
+
+dt = [];
+
+FDInum = iii*10 + jjj;
+
+if(jjj == 4)
+    continue;
+end
+
+if(iii == 4 && jjj== 5)
+    continue;
+end
 
 for i = 1:28
     if  dentalwithtooth1(i).ID == FDInum
         root = dentalwithtooth1(i);
     end
 end
-
-
 for j = 1:28
     if (upax(j).fid == FDInum)
         crown_ax = upax(j);
     end
 end
-
-
 for k = 1:28
     if (dental_crown(k).fid == FDInum)
         crown = dental_crown(k);
@@ -51,6 +63,8 @@ end
 s = fix(FDInum/10);  %取整
 g = mod(FDInum,10);%取余
 if s ==1 || s ==2
+%     addpath([functiondir 'data2\53120\u'])
+%     fdi = textread('FDI__.txt');
     fdi = textread('FDIUpper__.dxt');
     n = find (fdi == FDInum);
     if isempty(n)
@@ -84,11 +98,9 @@ if s ==1 || s ==2
         [i3,i4] = histc(iu,unique(iu));
         lone_edges_idx_vect = i3(i4) == 1;
         lone_edges_list = unique(raw_edges_list(lone_edges_idx_vect,:),'rows');
-        
 %         plot_edges(v_bingren,lone_edges_list,'r','LineWidth',2);
         %边界点：
         edge_p_b_local_list = unique([lone_edges_list(:,1);lone_edges_list(:,2)]);
-        
         %边界点在牙冠点中的位置
         [C_b,edge_p_b_local,~] = intersect(index_bingren,edge_p_b_local_list);
         edge_p_b = point_bingren(edge_p_b_local,:);
@@ -99,6 +111,8 @@ if s ==1 || s ==2
         end
         edg_b = sotr_edge(Edge_b,1);
         
+              
+
         ff_b = f_bingren(c2,:);
         f_b0 = ones (size(ff_b));
         for j = 1:length(point_bingren)
@@ -592,32 +606,26 @@ else
             - p_bingren(1))+ n_bingren(3)*(p(:,3) - p_bingren(3)))/ n_bingren(2))-3);
     end
 end
-
-
-writeOBJ('变形前的合并网格.obj', p, ff);
-
     
 [Omega, N0, N1, N2, outside_region_of_interest] = layers_from_handle(size(p_T,1), ff, exterior);
-
 [bi_L,bi_U,bi_P,bi_Q,bi_R,bi_S,bi_M] = biharm_factor_system(p,ff, bi_bndtype,masstype,reduction,Omega,N0,N1);
-
-
 %找到牙根部分跟牙冠变形部分最近的点，将牙根上的点拉至牙冠处
 for i = 1:length(pchange)
    [minValue,r]=mindis(crownforchange,pchange(i,:),1);
    minvalue(i) = minValue;  row(i) = r;
    p_T(index_tooth_change(i),:) = crownforchange(r,:);
 end
-
 bi_V = biharm_solve_with_factor( ...
     bi_L, bi_U, bi_P, bi_Q, bi_R, bi_S, bi_M, ...
     ff, p_T, Omega, N0, N1, bi_bndtype, reduction,BZ1,p);
  
 
 
+namestr3 = ['最终网格', num2str(FDInum), '.obj'];
  
-writeOBJ('最终网格.obj', bi_V, ff)
+writeOBJ(namestr3,bi_V, ff)
 
-b = select_holes_and_boundary(bi_V, ff);
-disp(['b ==', num2str(b)]);
+disp(FDInum);
+    end
+end
 disp('finished.');

@@ -58,10 +58,9 @@ function [xV] = biharm_solve_with_factor( ...
     else % full matrix
         rhs = [ rhs_Dx; rhs_Dy];   
     end
-    % back substitute to solve for this coordinate
+   
     sol = Q*(U\(L\(P*(R\rhs))));
-
-    % extract just primary variable's values 
+ 
     if(strcmp(reduction,'no_flatten'))
       ny = size(all,2);
       xV(Omega,coord_index) = sol(ny+1:end);   
