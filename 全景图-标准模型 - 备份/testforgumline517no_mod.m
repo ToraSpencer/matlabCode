@@ -27,8 +27,8 @@ load('trfromtoothtocrown.mat');
 % load('low_bingren.mat');
 
 %相同的FDI号拿出来
-prompt  = '请输入FDI编号 \n';
-x = input(prompt);
+ 
+x = 13;
 for i = 1:28
     if  dentalwithtooth1(i).ID == x
         root = dentalwithtooth1(i);
@@ -260,25 +260,44 @@ if s ==1 || s ==2
             
         end
         if roww(1)<length(edg_b)/2
-            for j = 1:length(roww)-1
+            
+            s = find(roww > length(edg_b)/2);
+            
+            for j = 1:s(end)-1
                 if roww(j) ~= roww(j+1) 
-                    dt = [dt;[edg_b(roww(j):roww(j+1)-1,:),repmat(edg_t(j,2),roww(j+1)-roww(j),1)]];
+                    dt = [dt; [edg_b(roww(j):roww(j+1)-1,:),repmat(edg_t(j,2),roww(j+1)-roww(j),1)]];
                 end
             end
+            
             if roww(end)==length(edg_b)
                 dt = [dt;[edg_b(roww(end),:),edg_t(1,1)]];
                 if roww(1)~=1
-                    dt = [dt;[edg_b(1:roww(1),:),repmat(edg_t(1,1),roww(1),1)]];
+                    dt = [dt;[edg_b(1:roww(1)-1,:),repmat(edg_t(1,1),roww(1)-1,1)]];
                 end
             elseif roww(end) > length(edg_b)/2 && roww(end)<length(edg_b)
                 dt = [dt;[edg_b(roww(end):length(edg_b),:),repmat(edg_t(1,1),length(edg_b)-roww(end)+1,1)]];
                 if roww(1)~=1
-                    dt = [dt;[edg_b(1:roww(1),:),repmat(edg_t(1,1),roww(1),1)]];
+                    dt = [dt;[edg_b(1:roww(1)-1,:),repmat(edg_t(1,1),roww(1)-1,1)]];
                 end
-            elseif  roww(end) < length(edg_b)/2 && roww(1)~=1
-               s = find(roww > length(edg_b)/2);
+            elseif  roww(end) < length(edg_b)/2 && roww(1)~=1               
                dt = [dt;[edg_b(roww(s(end)):length(edg_b),:),repmat(edg_t(s(end),2),length(edg_b)-roww(s(end))+1,1)]];
-               dt = [dt;[edg_b(1:roww(end),:),repmat(edg_t(s(end),2),roww(end),1)]]; 
+               
+               if roww(s(end)+1) ~= roww(end) 
+                   if roww(s(end)+1) ~= 1
+                       dt = [dt;[edg_b(1:roww(s(end)+1)-1,:),repmat(edg_t(s(end),2),roww(s(end)+1)-1,1)]];
+                   end
+                   
+                   for j = s(end)+1:length(roww)-1
+                      if roww(j) ~= roww(j+1) 
+                           dt = [dt;[edg_b(roww(j):roww(j+1)-1,:),repmat(edg_t(j,2),roww(j+1)-roww(j),1)]];
+                      end 
+                   end
+                   
+               else
+                   
+                   dt = [dt;[edg_b(1:roww(end)-1,:),repmat(edg_t(s(end),2),roww(end)-1,1)]];
+               end
+               
                dt = [dt;[edg_b(roww(end):roww(1)-1,:),repmat(edg_t(1,1),roww(1)-roww(end),1)]]; 
             end
             
@@ -561,7 +580,9 @@ else
             
         end
         if roww(1)<length(edg_b)/2
-            for j = 1:length(roww)-1
+            
+            s = find(roww > length(edg_b)/2);
+            for j = 1:s(end)-1
                 if roww(j) ~= roww(j+1) 
                     dt = [dt;[edg_b(roww(j):roww(j+1)-1,:),repmat(edg_t(j,2),roww(j+1)-roww(j),1)]];
                 end
@@ -569,17 +590,28 @@ else
             if roww(end)==length(edg_b)
                 dt = [dt;[edg_b(roww(end),:),edg_t(1,1)]];
                 if roww(1)~=1
-                    dt = [dt;[edg_b(1:roww(1),:),repmat(edg_t(1,1),roww(1),1)]];
+                    dt = [dt;[edg_b(1:roww(1)-1,:),repmat(edg_t(1,1),roww(1)-1,1)]];
                 end
             elseif roww(end) > length(edg_b)/2 && roww(end)<length(edg_b)
                 dt = [dt;[edg_b(roww(end):length(edg_b),:),repmat(edg_t(1,1),length(edg_b)-roww(end)+1,1)]];
                 if roww(1)~=1
-                    dt = [dt;[edg_b(1:roww(1),:),repmat(edg_t(1,1),roww(1),1)]];
+                    dt = [dt;[edg_b(1:roww(1)-1,:),repmat(edg_t(1,1),roww(1)-1,1)]];
                 end
             elseif  roww(end) < length(edg_b)/2 && roww(1)~=1
-               s = find(roww > length(edg_b)/2);
+%                s = find(roww > length(edg_b)/2);
                dt = [dt;[edg_b(roww(s(end)):length(edg_b),:),repmat(edg_t(s(end),2),length(edg_b)-roww(s(end))+1,1)]];
-               dt = [dt;[edg_b(1:roww(end),:),repmat(edg_t(s(end),2),roww(end),1)]]; 
+                if roww(s(end)+1) ~= roww(end) 
+                   if roww(s(end)+1) ~= 1
+                       dt = [dt;[edg_b(1:roww(s(end)+1)-1,:),repmat(edg_t(s(end),2),roww(s(end)+1)-1,1)]];
+                   end
+                       for j = s(end)+1:length(roww)-1
+                          if roww(j) ~= roww(j+1) 
+                               dt = [dt;[edg_b(roww(j):roww(j+1)-1,:),repmat(edg_t(j,2),roww(j+1)-roww(j),1)]];
+                          end 
+                       end
+               else
+                   dt = [dt;[edg_b(1:roww(end)-1,:),repmat(edg_t(s(end),2),roww(end)-1,1)]];
+               end
                dt = [dt;[edg_b(roww(end):roww(1)-1,:),repmat(edg_t(1,1),roww(1)-roww(end),1)]]; 
             end
             
@@ -629,9 +661,6 @@ else
                                 & v_bingren(:,2)>=(p_bingren(2) - (n_bingren(1)*(v_bingren(:,1) - p_bingren(1))+n_bingren(3)*(v_bingren(:,3) - p_bingren(3)))/n_bingren(2))-2);
         crownforchange = v_bingren(index_crown_change,:);
         
-        
-        
-        
 
         index_tooth_change =  find(p(:,2)<(c(2) - ( n_bingren(1)*(p(:,1) ...
             - p_bingren(1))+ n_bingren(3)*(p(:,3) - p_bingren(3)))/ n_bingren(2))+1 ...
@@ -670,12 +699,12 @@ bi_V = biharm_solve_with_factor( ...
     ff, p_T, Omega, N0, N1, bi_bndtype, reduction,BZ1,p);
 figure()
 trisurf(ff,bi_V(:,1),bi_V(:,2),bi_V(:,3),'facecolor','c','edgecolor','b')
+
 % axis image
-namestr3 = [num2str(x),'.','obj'];
+namestr3 = ['最终网格', num2str(x),'.','obj'];
 writeOBJ(namestr3,bi_V,ff)
 
-writeOBJ('最终网格.obj',bi_V,ff);
-
+ 
 close all;
 disp('finished.');
  
