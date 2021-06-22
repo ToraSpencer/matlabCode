@@ -24,6 +24,7 @@ blabla/
 !/myTest/locationUpper__.dxt
 !/myTest/testdata(4)/*
 !/myTest/测试数据/*
+!/tooth_root_test/*.m
 
 
 #忽略子目录下的所有文件
