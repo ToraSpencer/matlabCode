@@ -25,6 +25,9 @@ blabla/
 !/myTest/testdata(4)/*
 !/myTest/测试数据/*
 !/tooth_root_test/*.m
+!/tooth_root_test/*.mat
+!/几何处理/*.m
+!/几何处理/*.mat
 
 
 #忽略子目录下的所有文件

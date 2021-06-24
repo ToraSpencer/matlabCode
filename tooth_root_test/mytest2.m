@@ -4,6 +4,7 @@
  clear all;
 dbstop if error 
 
+
  %% 0 准备数据
     load('D:\workstation\gitRepositories\matlabCode\tooth_root_test\matlab.mat')
     
@@ -42,7 +43,6 @@ dbstop if error
     patientCutTris = patientTris(sum(patientTris <= toothdata{8,order}, 2)  == 3, :);
 
  
-    
 %% 1. 计算切割曲面
     % 提取边缘控制点
     n = 20;
@@ -141,51 +141,60 @@ dbstop if error
     writeOBJ('cutRootTooth.obj', rootCutVers, rootCutTris);
 
     
-%%  4.连三角片 
+%% 4.连三角片 
 
     % 在平面上建立连接关系
     hole = Calc_Boundary(patientCutTris);
-    idx_i = hole.boundary.edge(:,1);
-    p_i_3d = patientCutVers(idx_i,:);
+    patientEdge = hole.boundary.edge;
+    pEdgeVersIdx = patientEdge(:,1);
+    pEdgeVers = patientCutVers(pEdgeVersIdx,:);
+    
     hole = Calc_Boundary(rootCutTris);
-    idx_o = hole.boundary.edge(:,1);
-    p_o_3d = rootCutVers(idx_o,:);
-    proj = zeros(3,3);
-    proj(:,3) = patientDir';
-    proj(:,1) = normalizerow(cross(proj(:,3)', [0 0 1]))';
-    proj(:,2) = cross(proj(:,3)', proj(:,1)')';
-    p_i_2d = bsxfun(@minus, p_i_3d, mean([p_i_3d; p_o_3d])) * proj;
-    p_i_2d = smooth_loop(p_i_2d(:,1:2), 0.01);
-    p_i_2d = 0.5*bsxfun(@rdivide, p_i_2d, normrow(p_i_2d));
-    p_o_2d = bsxfun(@minus, p_o_3d, mean([p_i_3d; p_o_3d])) * proj;
-    p_o_2d = smooth_loop(p_o_2d(:,1:2), 0.01);
-    p_o_2d = bsxfun(@rdivide, p_o_2d, normrow(p_o_2d));
+    rootEdge = hole.boundary.edge;
+    rEdgeVersIdx = rootEdge(:,1);
+    rEdgeVers = rootCutVers(rEdgeVersIdx,:);
+  
+    mergeCenter = mean([pEdgeVers; rEdgeVers]);
+    
+    innerCircle = bsxfun(@minus, pEdgeVers, mergeCenter) * patientAxisTrans;
+    innerCircle = smooth_loop(innerCircle(:,1:2), 0.01);      % 平滑操作？
+    innerCircle = 0.5*bsxfun(@rdivide, innerCircle, normrow(innerCircle));
+    
+    outerCircle = bsxfun(@minus, rEdgeVers, mergeCenter) * patientAxisTrans;
+    outerCircle = smooth_loop(outerCircle(:,1:2), 0.01);      
+    outerCircle = bsxfun(@rdivide, outerCircle, normrow(outerCircle));
 
-    n_i = size(p_i_2d,1);
-    n_o = size(p_o_2d,1);
-    E = [[1:n_i; [2:n_i,1]]'; [1:n_o; [2:n_o,1]]' + n_i];
-    [~, Fa] = triangle([p_i_2d; p_o_2d], E, mean(p_i_2d), 'NoBoundarySteiners');
-    Fa = Fa(:, [3,2,1]);
-
-%% 5.修整牙根的形状：
-
+    innerCount = size(innerCircle,1);
+    outerCount = size(outerCircle,1);
+    edgeInPlane = [[1:innerCount; [2:innerCount,1]]'; [1:outerCount; [2:outerCount,1]]' + innerCount];
+    versInPlane = [innerCircle; outerCircle];
+    [~, trisInPlane] = triangle(versInPlane, edgeInPlane, mean(innerCircle), 'NoBoundarySteiners');
+    %Fa = Fa(:, [3,2,1]);
+    
     % 牙冠和牙根融合
     finalVers = [patientCutVers; rootCutVers];
-    reidx = [idx_i; idx_o + size(patientCutVers,1)];
-    finalTris = [patientCutTris; rootCutTris + size(patientCutVers,1); reidx(Fa)];
+    edgeVersIdx = [pEdgeVersIdx; rEdgeVersIdx + size(patientCutVers,1)];
+    addTris = edgeVersIdx(trisInPlane);       % 二维空间中两个环连成的片转化为融合网格中的三角片。
+    finalTris = [patientCutTris; rootCutTris + size(patientCutVers,1); addTris];
 
+    
+%% 5.修整牙根的形状：
     % 融合部分光滑
     A = adjacency_matrix(finalTris);
     L = A - diag(sparse(sum(A,2)));
     lhs = L;
     L2 = L*L;
-    lhs(idx_o + size(patientCutVers,1), :) = L2(idx_o + size(patientCutVers,1), :);
+    lhs(rEdgeVersIdx + size(patientCutVers,1), :) = L2(rEdgeVersIdx + size(patientCutVers,1), :);
     rhs = L*finalVers;
-    rhs(idx_o + size(patientCutVers,1), :) = 0;
+    rhs(rEdgeVersIdx + size(patientCutVers,1), :) = 0;
     finalVers = solve_equation(lhs, rhs, 1:size(patientCutVers,1), patientCutVers);
  
     
     writeOBJ('最终结果.obj', finalVers, finalTris);
 
     disp('finished');
+    
+%%
+    figure
+    drawMesh(versInPlane, trisInPlane);
 
