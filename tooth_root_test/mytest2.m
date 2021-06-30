@@ -157,52 +157,59 @@ dbstop if error
     % 4.2 边缘点集投影到二维平面，然后平滑
     mergeCenter = mean([pEdgeVers; rEdgeVers]);
     
-    innerCircle = bsxfun(@minus, pEdgeVers, mergeCenter) * patientAxisTrans;
-    beforeSmooth = innerCircle;
-    beforeSmooth(:, 3) = zeros(size(beforeSmooth,1), 1);
-    OBJwriteVertices('beforeSmooth.obj', beforeSmooth);
+    patientCircle = bsxfun(@minus, pEdgeVers, mergeCenter) * patientAxisTrans;
+    patientCircle = smooth_loop(patientCircle(:,1:2), 0.01);      % 平滑操作？
  
-    innerCircle = smooth_loop(innerCircle(:,1:2), 0.01);      % 平滑操作？
-    afterSmooth = zeros(size(innerCircle,1), 3);
-    afterSmooth(:, 1) = innerCircle(:, 1);
-    afterSmooth(:, 2) = innerCircle(:, 2);
-    OBJwriteVertices('afterSmooth.obj', afterSmooth);
  
-    % ？？？变形和位移？
-    temp = normrow(innerCircle);
-    temp = repmat(temp,1, 2);
-    temp2 = 0.5*innerCircle./temp;
-    innerCircle = 0.5*bsxfun(@rdivide, innerCircle, normrow(innerCircle));
+    % 4.3 ？？？变形和位移？
+    innerCircle = 0.5*bsxfun(@rdivide, patientCircle, normrow(patientCircle));
 
-    outerCircle = bsxfun(@minus, rEdgeVers, mergeCenter) * patientAxisTrans;
-    outerCircle = smooth_loop(outerCircle(:,1:2), 0.01);      
-    outerCircle = bsxfun(@rdivide, outerCircle, normrow(outerCircle));
+    rootCircle = bsxfun(@minus, rEdgeVers, mergeCenter) * patientAxisTrans;
+    rootCircle = smooth_loop(rootCircle(:,1:2), 0.01);    
+    temp = normrow(rootCircle);
+    temp = repmat(temp,1, 2);
+    temp2 = rootCircle./temp;
+    outerCircle = bsxfun(@rdivide, rootCircle, normrow(rootCircle));
+    
+    % for debug
+    tempOuter = [outerCircle, zeros(size(outerCircle, 1), 1)];
+    tempInner = [innerCircle, zeros(size(innerCircle, 1), 1)];
+    OBJwriteVertices('tempInner.obj', tempInner);
+    OBJwriteVertices('tempOuter.obj', tempOuter);
     
 
-    % 4.3 二维点集三角剖分
+    % 4.4 二维点集三角剖分
     innerCount = size(innerCircle,1);
     outerCount = size(outerCircle,1);
     edgeInPlane = [[1:innerCount; [2:innerCount,1]]'; [1:outerCount; [2:outerCount,1]]' + innerCount];
     versInPlane = [innerCircle; outerCircle];
     [~, trisInPlane] = triangle(versInPlane, edgeInPlane, mean(innerCircle), 'NoBoundarySteiners');
- 
+    figure
+    drawMesh(versInPlane, trisInPlane);
     
-    % 4.4 牙冠和牙根融合
+    % 4.5 牙冠和牙根融合
     finalVers = [patientCutVers; rootCutVers];
-    edgeVersIdx = [pEdgeVersIdx; rEdgeVersIdx + size(patientCutVers,1)];
+    rEdgeVersIdx = rEdgeVersIdx + size(patientCutVers,1);
+    edgeVersIdx = [pEdgeVersIdx; rEdgeVersIdx];
     addTris = edgeVersIdx(trisInPlane);       % 二维空间中两个环连成的片转化为融合网格中的三角片。
     finalTris = [patientCutTris; rootCutTris + size(patientCutVers,1); addTris];
-
+        
+    writeOBJ('融合网格.obj', finalVers, finalTris);
     
 %% 5.修整牙根的形状：
     % 融合部分光滑
-    A = adjacency_matrix(finalTris);
+    A = adjacency_matrix(finalTris);   % 融合网格的邻接矩阵,维度为versCount*versCount，两个顶点有边连接则对应元素为1；
+    Aelem = nonzeros(A);    
+    
+    % FOR TEST
+    temp = sum(A, 2);
+    
     L = A - diag(sparse(sum(A,2)));
     lhs = L;
     L2 = L*L;
-    lhs(rEdgeVersIdx + size(patientCutVers,1), :) = L2(rEdgeVersIdx + size(patientCutVers,1), :);
+    lhs(rEdgeVersIdx, :) = L2(rEdgeVersIdx, :);
     rhs = L*finalVers;
-    rhs(rEdgeVersIdx + size(patientCutVers,1), :) = 0;
+    rhs(rEdgeVersIdx, :) = 0;
     finalVers = solve_equation(lhs, rhs, 1:size(patientCutVers,1), patientCutVers);
  
     
@@ -211,6 +218,5 @@ dbstop if error
     disp('finished');
     
 %%
-    figure
-    drawMesh(versInPlane, trisInPlane);
+
 
