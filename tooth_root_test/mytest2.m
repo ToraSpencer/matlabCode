@@ -210,8 +210,15 @@ dbstop if error
     lhs(rEdgeVersIdx, :) = L2(rEdgeVersIdx, :);
     rhs = L*finalVers;
     rhs(rEdgeVersIdx, :) = 0;
-    finalVers = solve_equation(lhs, rhs, 1:size(patientCutVers,1), patientCutVers);
- 
+    
+    % for debug
+    lhsElems = nonzeros(lhs);
+    rhsElems = nonzeros(rhs);
+    lll = lhs(:, 1);
+    rrr = rhs(:, 1);
+    
+    %finalVers = solve_equation(lhs, rhs, 1:size(patientCutVers,1), patientCutVers);
+    finalVers = solve_equation_modified(lhs, rhs, 1:size(patientCutVers,1), patientCutVers);
     
     writeOBJ('×îÖÕ½á¹û.obj', finalVers, finalTris);
 
