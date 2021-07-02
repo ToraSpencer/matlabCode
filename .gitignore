@@ -1,11 +1,7 @@
 #忽略根目录下的所有文件
 *
 
-
 blabla/
-
-
-
 
 #包含目录
 !*/
@@ -26,8 +22,10 @@ blabla/
 !/myTest/测试数据/*
 !/tooth_root_test/*.m
 !/tooth_root_test/*.mat
+!/tooth_root_test/*.obj
 !/几何处理/*.m
 !/几何处理/*.mat
+!/triangle.exe
 
 
 #忽略子目录下的所有文件

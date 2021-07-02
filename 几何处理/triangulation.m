@@ -2,7 +2,6 @@
 
 
 %% 使用triangle库进行三角剖分
-
 clc;
 clear all;
 load('innerCircle.mat');
