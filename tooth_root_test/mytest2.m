@@ -25,6 +25,8 @@ dbstop if error
     else
         [rootVers, rootTris] = readOBJ('root2.obj');
     end
+    
+    
     patientVers = toothdata{1,order};
     patientTris = toothdata{2,order};
     patientDir = toothdata{7,order};
@@ -66,9 +68,9 @@ dbstop if error
     % 径向基函数
     dist2 = pdist2(fittingPoints, fittingPoints);
     P = [ones(3*n,1), fittingPoints];
-    A = [dist2, P; P', zeros(4,4)];
+    adjMat = [dist2, P; P', zeros(4,4)];
     b = [cv; zeros(4,1)];
-    coeff = A\b;    % 线性方程组A*x == b的解向量；
+    coeff = adjMat\b;    % 线性方程组A*x == b的解向量；
     
     % 画分割面
     syms x y z;
@@ -196,29 +198,28 @@ dbstop if error
         
     writeOBJ('融合网格.obj', finalVers, finalTris);
     
+    
 %% 5.修整牙根的形状：
     % 融合部分光滑
-    A = adjacency_matrix(finalTris);   % 融合网格的邻接矩阵,维度为versCount*versCount，两个顶点有边连接则对应元素为1；
-    Aelem = nonzeros(A);    
+    adjMat = adjacency_matrix(finalTris);   % 融合网格的邻接矩阵,维度为versCount*versCount，两个顶点有边连接则对应元素为1；
+ 
+    temp = sum(adjMat, 2);   
+    L = adjMat - diag(sparse(sum(adjMat,2)));
+ 
+    %for debug
+    flag = (temp == zeros(size(temp, 2), 1));
     
-    % FOR TEST
-    temp = sum(A, 2);
+    A = L;
     
-    L = A - diag(sparse(sum(A,2)));
-    lhs = L;
     L2 = L*L;
-    lhs(rEdgeVersIdx, :) = L2(rEdgeVersIdx, :);
-    rhs = L*finalVers;
-    rhs(rEdgeVersIdx, :) = 0;
+    A(rEdgeVersIdx, :) = L2(rEdgeVersIdx, :);
+ 
+    B = L*finalVers;
+    B(rEdgeVersIdx, :) = 0;
     
-    % for debug
-    lhsElems = nonzeros(lhs);
-    rhsElems = nonzeros(rhs);
-    lll = lhs(:, 1);
-    rrr = rhs(:, 1);
-    
-    %finalVers = solve_equation(lhs, rhs, 1:size(patientCutVers,1), patientCutVers);
-    finalVers = solve_equation_modified(lhs, rhs, 1:size(patientCutVers,1), patientCutVers);
+    Acon = 1:size(patientCutVers,1);
+    Bcon = patientCutVers;
+    finalVers = solve_equation_modified(A, B, Acon, Bcon);
     
     writeOBJ('最终结果.obj', finalVers, finalTris);
 

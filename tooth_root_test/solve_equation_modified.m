@@ -4,7 +4,11 @@ function X = solve_equation_modified(A, B, Acon, Bcon)
     Acon = Acon';
  
     [~, m] = size(A);
+    
     temp = sparse(1:length(Acon), Acon, 1, length(Acon), m);
+    
+    tempElems = nonzeros(temp);
+    
     A(Acon,:) = temp;
     B(Acon,:) = Bcon;
     
