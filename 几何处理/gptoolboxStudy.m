@@ -25,3 +25,7 @@ temp1 = A1\B1;
 temp2 = A2\B2;
  
 OBJwriteVertices('afterSmooth2.obj', afterSmooth);
+
+
+%% IO½Ó¿Ú£º
+ 
