@@ -5,8 +5,8 @@ function handle = gui_repair_root(handle)
     nT = size(toothdata,2);
     
 	% 牙齿中心和牙合中心
+
     toothCenter = zeros(nT,3);
-    
     for i = 1:nT
         toothCenter(i,:) = mean(toothdata{1,i});
     end
@@ -22,8 +22,7 @@ function handle = gui_repair_root(handle)
         V0 = toothdata{1,i};
         F0 = toothdata{2,i};
         dir = toothdata{7,i};
-        orig = toothdata{6,i};
-        
+ 
         % 牙齿局部坐标系
         toothCoord(:,1) = normalizerow(cross(toothCenter(i,:) - dentalCenter, -dir))';
         toothCoord(:,3) = -dir';
