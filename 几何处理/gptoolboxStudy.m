@@ -1,5 +1,6 @@
 %% gptoolbox - Geometry Processing Toolbox
- 
+ clc;
+ clear all;
 
 %% 斌杰的曲线平滑算法：
 clc;
@@ -28,4 +29,32 @@ OBJwriteVertices('afterSmooth2.obj', afterSmooth);
 
 
 %% IO接口：
+tooth =  Read_Obj('./data/tooth.obj');      
+writeOBJ('newTooth.obj', tooth.vertex, tooth.face);
+OBJwriteVertices('toothVers.obj', toothVers);
  
+ 
+%% 画图
+clc;
+clear all;
+tooth =  Read_Obj('./data/tooth.obj');  
+toothVers = tooth.vertex;
+
+%       画三维网格
+figure(1);
+trimesh(tooth.face,tooth.vertex(:,1),tooth.vertex(:,2),tooth.vertex(:,3));
+
+%       画点云
+figure(2)
+plot3(toothVers(:, 1), toothVers(:, 2), toothVers(:, 3), '.');
+
+%        getDirLine()——获取方向指示线点集
+xline = getDirLine([1, 0, 0], [0, 0, 0]);
+figure(3);
+plot3(xline(:, 1), xline(:, 2), xline(:, 3), '*');
+
+
+%% MyCrustOpen()——输出点云，输出三角片——！！！貌似生成的三角片朝向混乱
+trimesh(MyCrustOpen(toothVers), toothVers(:, 1), toothVers(:, 2), toothVers(:, 3));
+writeOBJ('补三角片生成的tooth网格.obj', toothVers, MyCrustOpen(toothVers));
+

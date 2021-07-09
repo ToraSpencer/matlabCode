@@ -8,7 +8,7 @@ function s = path_to_triangle()
   % See also: triangle
 
   if ispc
-    s = 'D:/workstation/gitRepositories/matlabCode/triangle.exe';
+    s = 'E:/workstation/gitRepositories/matlabCode/triangle.exe';
   elseif isunix || ismac
     % I guess this means linux
     [status, s] = system('which triangle');

@@ -6,7 +6,7 @@ dbstop if error
 
 
  %% 0 准备数据
-    load('D:\workstation\gitRepositories\matlabCode\tooth_root_test\matlab.mat')
+    load('./data/matlab.mat')
     
     order = 7;          % 病人牙齿编号
     
@@ -21,9 +21,9 @@ dbstop if error
     dentalCenter = mean(toothCenter);
     
     if order >= 5 && order <=10        % 对应着1，2，3号牙
-        [rootVers, rootTris] = readOBJ('root1.obj');
+        [rootVers, rootTris] = readOBJ('./data/root1.obj');
     else
-        [rootVers, rootTris] = readOBJ('root2.obj');
+        [rootVers, rootTris] = readOBJ('./data/root2.obj');
     end
     
     
@@ -178,7 +178,7 @@ dbstop if error
     tempInner = [innerCircle, zeros(size(innerCircle, 1), 1)];
     OBJwriteVertices('tempInner.obj', tempInner);
     OBJwriteVertices('tempOuter.obj', tempOuter);
-    
+     OBJwriteVertices('twoCircles.obj', [tempOuter; tempInner]);
 
     % 4.4 二维点集三角剖分
     innerCount = size(innerCircle,1);

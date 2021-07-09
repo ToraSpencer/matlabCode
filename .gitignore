@@ -1,42 +1,15 @@
-#忽略根目录下的所有文件
-*
-
-blabla/
-
-#包含目录
-!*/
+*.obj
+*.mat
 
 #指定不忽略的文件
+!/triangle.exe
 !*.m
 !*.gitignore
-!/myTest/dental_crown.mat
-!/myTest/dentalmodelwithroot0.1forlow.mat
-!/myTest/daxisofdental_crowm
-!/myTest/trfromtoothtocrown.mat
-!/myTest/带牙根标准牙.obj
-!/myTest/FDILower__.dxt
-!/myTest/FDIUpper__.dxt
-!/myTest/locationLower__.dxt
-!/myTest/locationUpper__.dxt
-!/myTest/testdata(4)/*
-!/myTest/测试数据/*
-!/tooth_root_test/*.m
-!/tooth_root_test/*.mat
-!/tooth_root_test/*.obj
-!/几何处理/*.m
-!/几何处理/*.mat
-!/triangle.exe
 
 
-#忽略子目录下的所有文件
-#/*
+#指定不忽略的文件夹
+!/几何处理/data/
+!/tooth_root_test/data/
 
-#忽略根目录下的文件
-#/build/
-#/appveyor/
-#/pear/
-#/scripts/
-#/travis/
 
-#忽略特定文件夹名
-#tests/
+ 
