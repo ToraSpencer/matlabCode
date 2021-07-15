@@ -1,5 +1,5 @@
 function [colormap]=cbrewer(cname, ncol, interp_method)
-% CBREWER - This function produces a colorbrewer table (rgb data) for a 
+% This function produces a colorbrewer table (rgb data) for a 
 % given type, name and number of colors of the colorbrewer tables. 
 % For more information on 'colorbrewer', please visit
 % http://colorbrewer2.org/

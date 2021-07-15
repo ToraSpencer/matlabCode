@@ -14,11 +14,14 @@ function [ B ] = normrow( A )
   switch size(A,2)
   case 2
     B = hypot(A(:,1),A(:,2));
-  otherwise
-    %B = sqrt(sum(A.^2,2));
-    M = max(abs(A),[],2);
-    B = M.*sqrt(sum((A./M).^2,2));
-    B(M==0) = 0;
+      otherwise
+%% my debug
+%     M = max(abs(A),[],2);
+%     B = M.*sqrt(sum((A./M).^2,2));
+%     B(M==0) = 0;
+    temp = A.^2;
+    temp = sum(temp, 2);
+    B = sqrt(temp);
   end
 end
 

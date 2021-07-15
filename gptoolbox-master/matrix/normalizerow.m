@@ -15,8 +15,13 @@ function [ B ] = normalizerow( A ) %#codegen
     % speed up (20x) for large sparse matrices
     B = bsxfun(@times,A,1./sqrt(sum(A.^2,2)));
   else
-    % normrow will use robust norm
-    B = A./normrow(A);
+    %% my debug
+    %      B = A./normrow(A);
+    temp = normrow(A);                      % апоРа©
+    temp = ones(size(temp))./temp;
+    temp  = repmat(temp, 1, size(A, 2));
+    B = A.*temp;
+    
   end
 end
 

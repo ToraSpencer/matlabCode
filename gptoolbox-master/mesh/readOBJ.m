@@ -1,5 +1,5 @@
 function [V,F,UV,TF,N,NF] = readOBJ(filename,varargin)
-  % READOBJ reads an OBJ file with vertex/face information
+  % 读取网格、点云数据
   %
   % [V,F,UV,TF,N,NF] = readOBJ(filename)
   % [V,F,UV,TF,N,NF] = readOBJ(filename,'ParameterName',ParameterValue,...)

@@ -1,10 +1,7 @@
 function L = cotmatrix(V,F)
   % COTMATRIX computes cotangent matrix (laplacian mesh operator), (mass/area
   % terms already cancelled out)
-  %
-  % L = cotmatrix(V,F)
-  % L = cotmatrix(V,T)
-  %
+
   % For size(F,2)==4, This is distinctly NOT following definition that appears
   % in the appendix of: ``Interactive Topology-aware Surface Reconstruction,''
   % by Sharf, A. et al
@@ -27,14 +24,12 @@ function L = cotmatrix(V,F)
   % Outputs:
   %   L  sparse #V x #V matrix of cot weights 
   %
-  % Copyright 2011, Alec Jacobson (jacobson@inf.ethz.ch), Denis Zorin
-  %
-  % See also: cotangent
-  %
+ 
 
   ss = size(F,2);
   switch ss
   case 3
+      
     %% Could just replace everything with:
     %C = cotangent(V,F);
     %L = sparse(F(:,[2 3 1]), F(:,[3 1 2]), C,size(V,1),size(V,1));
