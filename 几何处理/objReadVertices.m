@@ -1,5 +1,5 @@
 %% 从OBJ文件中读取点云数据
-function [vertexArray] = ReadObj(fullfilename)
+function [vertexArray] = objReadVertices(fullfilename)
 
 fileId = fopen(fullfilename, 'r');
 numVertex = 0;

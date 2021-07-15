@@ -1,20 +1,10 @@
-function [boundaries] = detect_mesh_holes_and_boundary(T)
+function [boundaries] = detect_mesh_holes_and_boundary(tris)
 %% detect_mesh_holes_and_boundary : function to detect vertices which are part of
-% the mesh boundary and list their indices in boundary vectors.
-%
-% Author & support : nicolas.douillet (at) free.fr, 2020.
-%                                         
-% From the vertex and triangle lists, this function computes
-% the mesh boundaries when there are some (opened surface
-% or presence of holes in the mesh).
-%
-% Principle is based on detecting and sorting non shared edges.  
-%
-%
+ 
 % Input arguments
 %
 %       [ |  |  |]
-% - T = [i1 i2 i3], positive integer matrix double, the triangulation, size(T) = [nb_triangles,3].
+% - tris = [i1 i2 i3], positive integer matrix double, the triangulation, size(T) = [nb_triangles,3].
 %       [ |  |  |]
 %
 %
@@ -27,7 +17,7 @@ function [boundaries] = detect_mesh_holes_and_boundary(T)
 tic;
 
 % Build  lists
-raw_edges_list = query_edges_list(T);
+raw_edges_list = query_edges_list(tris);
 [~,~,iu] = unique(sort(raw_edges_list,2),'rows'); % unique(raw_edges_list,'rows');
 
 % Unique edges only (even in mirror)

@@ -58,3 +58,13 @@ plot3(xline(:, 1), xline(:, 2), xline(:, 3), '*');
 trimesh(MyCrustOpen(toothVers), toothVers(:, 1), toothVers(:, 2), toothVers(:, 3));
 writeOBJ('²¹Èý½ÇÆ¬Éú³ÉµÄtoothÍø¸ñ.obj', toothVers, MyCrustOpen(toothVers));
 
+
+%% ²é¶´¡¢²¹¶´
+clc;
+clear all;
+[vers, tris] = readOBJ('ÇÐ¸îÑÀ¹Ú.obj');
+bdry =  detect_mesh_holes_and_boundary(tris);
+holeVersIdx = bdry{1,1};
+holeVers = vers(holeVersIdx, :);
+objWriteVertices('ÇÐ¸îÑÀ¹ÚµÄ¶´.obj', holeVers);
+
