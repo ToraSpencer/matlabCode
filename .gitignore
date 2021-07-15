@@ -7,9 +7,11 @@
 !*.gitignore
 
 
+
 #指定不忽略的文件夹
 !/几何处理/data/
 !/tooth_root_test/data/
+!/gptoolbox-master/
 
 
  
