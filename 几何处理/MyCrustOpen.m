@@ -1,7 +1,5 @@
 %% 
-% MyCrustOpen
-% 
-% 
+%   输入点云生成三角片
 % This version has been developped for open surface with no sharp edges. 
 % 
 % Differently from crust based algorithm does not ensure a tight

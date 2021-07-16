@@ -1,5 +1,5 @@
 function [N] = compute_vertex_normals(V, T, ngb_degre, mode)
-%% compute_vertex_normals : function to compute vertex normals.
+% 计算网格中顶点的法向量
 %
 % Author & support : nicolas.douillet (at) free.fr, 2020.
 %
