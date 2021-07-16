@@ -1,22 +1,19 @@
-function M = massmatrix(V,F, type)
-  % MASSMATRIX mass matrix for the mesh given by V and F
-  %
-  % M = massmatrix(V,F, type)
-  % M = massmatrix(V,T, type)
-  %
-  % Inputs:
+function M = massmatrix(V,F, type)  
+
   %  V  #V x 3 matrix of vertex coordinates
   %  F  #F x simplex-size  matrix of indices of triangle corners
-  %  type  string containing type of mass matrix to compute
+  
+  %  type参数
   %   'full': full mass matrix for p.w. linear fem
   %   'barycentric': diagonal lumped mass matrix obtained by summing 1/3
-  %   'voronoi': true voronoi area, except in cases where triangle is obtuse
-  %     then uses 1/2, 1/4, 1/4 {simplex size 3 only}
+  %   'voronoi'（默认值）—— true voronoi area, except in cases where triangle is obtuse
+  %                     then uses 1/2, 1/4, 1/4 {simplex size 3 only}
+   
   % Output:
   %  M  #V by #V sparse mass matrix
-  %
+
   % Copyright 2011, Alec Jacobson (jacobson@inf.ethz.ch)
-  %
+
 
   function r = cross2(a,b)
     % Optimizes r = cross(a,b,2), that is it computes cross products per row

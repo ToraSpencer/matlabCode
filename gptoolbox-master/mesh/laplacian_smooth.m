@@ -1,4 +1,4 @@
-function [U,Uall] = laplacian_smooth(V,F,L_method,b,lambda,method,S,max_iter)
+function [U,Uall] = laplacian_smooth(vers, tris, L_method, b, lambda,method, S, max_iter)
   % LAPLACIAN_SMOOTH smooth a mesh using implicit/explicit laplacian smoothing
   %
   % [U] = laplacian_smooth(V,F)
@@ -8,24 +8,29 @@ function [U,Uall] = laplacian_smooth(V,F,L_method,b,lambda,method,S,max_iter)
   % Inputs:
   %   V  #V x 3 matrix of vertex coordinates
   %   F  #F x 3  matrix of indices of triangle corners
+  
   %   L_method  method for laplacian
   %      'uniform'
   %      'cotan'
+  
   %   b  list of indices of fixed vertices
+  
   %   lambda  diffusion speed parameter {0.1}
+  
   %   method  method to use:
-  %     'implicit' (default)
-  %     'explicit'
+  %       'implicit' (default)
+  %       'explicit'
+  
   %   S  scalar fields to smooth (default V)
+  
   % Outputs:
   %   U  #V x 3 list of new vertex positions
   %   Uall  #V x 3 x iters list of new vertex positions for each iteration
   %   
 
   % number of vertices
-  n = size(V,1);
-  % nuymber of dimensions
-  dim = size(V,2);
+  n = size(vers,1);
+  dim = size(vers,2);
 
 
   if(~exist('L_method','var'))
@@ -48,7 +53,7 @@ function [U,Uall] = laplacian_smooth(V,F,L_method,b,lambda,method,S,max_iter)
   end
 
 
-  h = avgedge(V,F);
+  h = avgedge(vers,tris);
   if(~exist('tol','var'))
     tol = 0.001;
   end
@@ -58,14 +63,14 @@ function [U,Uall] = laplacian_smooth(V,F,L_method,b,lambda,method,S,max_iter)
   end
 
   if(~exist('S','var'))
-    S = V;
+    S = vers;
   end
 
 
   % only compute uniform laplacain once
   if strcmp(L_method,'uniform')
     % planar meshes should use uniform laplacian
-    A = adjacency_matrix(F);
+    A = adjacency_matrix(tris);
     L = A - diag(sum(A));
   end
 
@@ -83,7 +88,7 @@ function [U,Uall] = laplacian_smooth(V,F,L_method,b,lambda,method,S,max_iter)
   % recompute laplacian
   if strcmp(L_method,'cotan')
     % other 3D meshes should use cotangent laplacian
-    L = cotmatrix_embedded(V,F);
+    L = cotmatrix_embedded(vers,tris);
     %error
   end
 

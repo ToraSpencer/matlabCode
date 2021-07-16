@@ -1,5 +1,5 @@
 function t = tsurf(F,V,varargin)
-% 绘制三维网格的接口
+% 
   % TSURF trisurf wrapper, easily plot triangle meshes with(out) face or vertex
   % indices. Attaches callbacks so that click-and-holding on the mesh and then
   % pressing 'm' launches meshplot (if available)
@@ -10,7 +10,6 @@ function t = tsurf(F,V,varargin)
   % Inputs:
   %   F  list of faces #F x 3
   %   V  vertex positiosn #V x 3 or #V x 2
-  
   %   Optional:
   %     'VertexIndices' followed by 
   %     'FaceIndices' followed by 
@@ -19,7 +18,6 @@ function t = tsurf(F,V,varargin)
   %                  -1 -> text and grey background (decremented by 1)
   %                  >1 -> text
   %     ... additional options passed on to trisurf
-  
   % Outputs:
   %  t  handle to trisurf object
   %
