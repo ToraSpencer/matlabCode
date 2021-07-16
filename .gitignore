@@ -1,10 +1,13 @@
 *.obj
 *.mat
+*.png
 
 #指定不忽略的文件
 !/triangle.exe
 !*.m
 !*.gitignore
+
+
 
 #指定不忽略的文件夹
 !/几何处理/data/
