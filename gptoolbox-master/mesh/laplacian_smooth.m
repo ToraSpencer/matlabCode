@@ -1,10 +1,11 @@
 function [U,Uall] = laplacian_smooth(vers, tris, L_method, b, lambda,method, S, max_iter)
-  % LAPLACIAN_SMOOTH smooth a mesh using implicit/explicit laplacian smoothing
-  %
+
+  % laplace平滑
+
   % [U] = laplacian_smooth(V,F)
   % [U] = laplacian_smooth(V,F,L_method,b,lambda,method,S)
   % [U,Uall] = laplacian_smooth(V,F,L_method,b,lambda,method,S,max_iter)
-  % 
+
   % Inputs:
   %   V  #V x 3 matrix of vertex coordinates
   %   F  #F x 3  matrix of indices of triangle corners
@@ -13,7 +14,7 @@ function [U,Uall] = laplacian_smooth(vers, tris, L_method, b, lambda,method, S, 
   %      'uniform'
   %      'cotan'
   
-  %   b  list of indices of fixed vertices
+  %   b  list of indices of fixed vertices ？？？ 用例里面传入的是空向量。
   
   %   lambda  diffusion speed parameter {0.1}
   
@@ -25,10 +26,11 @@ function [U,Uall] = laplacian_smooth(vers, tris, L_method, b, lambda,method, S, 
   
   % Outputs:
   %   U  #V x 3 list of new vertex positions
-  %   Uall  #V x 3 x iters list of new vertex positions for each iteration
+  %   Uall  #V x 3 x iters 每一次迭代的结果。
   %   
 
-  % number of vertices
+ 
+  %% 1. 读取参数
   n = size(vers,1);
   dim = size(vers,2);
 
@@ -66,12 +68,14 @@ function [U,Uall] = laplacian_smooth(vers, tris, L_method, b, lambda,method, S, 
     S = vers;
   end
 
+  
+ %% 2. 计算laplacian
+ 
+ % 平面图网格应该使用uniform laplacian
+  if strcmp(L_method, 'uniform')
 
-  % only compute uniform laplacain once
-  if strcmp(L_method,'uniform')
-    % planar meshes should use uniform laplacian
     A = adjacency_matrix(tris);
-    L = A - diag(sum(A));
+    L = A - diag(sum(A));               % uniform laplacian
   end
 
   % place for factorization and symmtery flag used by min_quad_with_fixed
@@ -85,13 +89,13 @@ function [U,Uall] = laplacian_smooth(vers, tris, L_method, b, lambda,method, S, 
     Uall = [];
   end 
 
-  % recompute laplacian
+  % 余切laplacian
   if strcmp(L_method,'cotan')
-    % other 3D meshes should use cotangent laplacian
     L = cotmatrix_embedded(vers,tris);
-    %error
   end
 
+  
+ %% 3. 迭代
   while( iter < max_iter && (iter == 0 || max(abs(U(:)-U_prev(:)))>tol*h))
     U_prev = U;
     switch method
@@ -116,7 +120,5 @@ function [U,Uall] = laplacian_smooth(vers, tris, L_method, b, lambda,method, S, 
     iter = iter + 1;
   end
 
-  %[iter max_iter]
-  %[max(abs(U(:)-U_prev(:))) tol*h]
-
+  
 end

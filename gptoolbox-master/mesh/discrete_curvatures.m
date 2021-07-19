@@ -1,41 +1,29 @@
 function [k,H,K,M,T] = discrete_curvatures(V,F)
-  % DISCRETE_CURVATURES Compute discrete mean, Gaussian and principal curvatures
-  %
+%   计算网格的平均曲率，高斯曲率，主曲率；
+ 
   % Inputs:
   %   V  #V by 3 list of vertex positions
   %   F  #F by 3 list of triangle indices into V
   % Outputs:
-  %   k  #V by 2 list of integrated major and minor curvatures
+  %   k  #V 主曲率，二元素向量，最大曲率和最小曲率
   %   H  #V list of integrated mean-curvature values
   %   K  #V list of integrated Gaussian curvature
-  %
-  % See also:
-  %   discrete_gaussian_curvature, discrete_mean_curvature
-  %
+
   K = discrete_gaussian_curvature(V,F);
   H = discrete_mean_curvature(V,F);
-  %a = -1;
-  %b = 2*H;
-  %c = -K;
-  %k = (-b+[1 -1].*sqrt(b.^2 + 4*a*c))./(2.*a);
-  %k2 = k;
-  %k = k(:,1);
-  %k = sort([k 2*H-k],2,'descend');
+
   M = massmatrix(V,F);
-  %k = M*((M\H) + [1 -1].*sqrt((M\H).^2 - M\K));
- 
-  %% my debug;
-  %k = H + [1 -1].*sqrt(H.^2 - M*K);
+
   k = H;
 
   if nargout > 4
-    % Copied from discrete_mean_curvature
     [A,C] = adjacency_dihedral_angle_matrix(V,F);
     [AI,AJ,AV] = find(A);
     [CI,CJ,CV] = find(C);
     assert(isequal(CI,AI));
     assert(isequal(CJ,AJ));
-    % index into F(:)
+
+    
     opp = sub2ind(size(l),CI,CV);
     inc = [ ...
       sub2ind(size(l),CI,mod(CV+1-1,3)+1) ...
