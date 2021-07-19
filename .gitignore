@@ -1,5 +1,9 @@
 *.obj
 *.mat
+*.png
+*.pdf
+*.jpg
+ 
 
 #指定不忽略的文件
 !/triangle.exe
