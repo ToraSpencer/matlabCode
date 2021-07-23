@@ -1,6 +1,10 @@
 clc;
 clear all;
 [vers1, tris1] = readOBJ('./data/bunny.obj');
+
+
+%% 画点云用matlab自带的plot3()接口：
+plot3(vers1(:, 1), vers1(:, 2), vers1(:, 3), '.');
  
 
 
