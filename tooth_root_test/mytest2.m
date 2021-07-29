@@ -44,6 +44,10 @@ dbstop if error
     patientCutVers = patientVers(1:toothdata{8,order},:);
     patientCutTris = patientTris(sum(patientTris <= toothdata{8,order}, 2)  == 3, :);
 
+    patientCenter = mean(patientVers, 1);
+    printDir('xdir.obj', patientAxisTrans(:, 1)', patientCenter);
+    printDir('ydir.obj', patientAxisTrans(:, 2)', patientCenter);
+    printDir('zdir.obj', patientAxisTrans(:, 3)', patientCenter);
  
 %% 1. 计算切割曲面
     % 提取边缘控制点
@@ -155,18 +159,23 @@ dbstop if error
     rootEdge = hole.boundary.edge;
     rEdgeVersIdx = rootEdge(:,1);
     rEdgeVers = rootCutVers(rEdgeVersIdx,:);
+    
+    %   for debug:
+    OBJwriteVertices('rEdgeVers.obj', rEdgeVers);
+    OBJwriteVertices('pEdgeVers.obj', pEdgeVers);
   
     % 4.2 边缘点集投影到二维平面，然后平滑
     mergeCenter = mean([pEdgeVers; rEdgeVers]);
     
     patientCircle = bsxfun(@minus, pEdgeVers, mergeCenter) * patientAxisTrans;
-    patientCircle = smooth_loop(patientCircle(:,1:2), 0.01);      % 平滑操作？
+    patientCircle = smooth_loop(patientCircle(:,1:2), 0.001);      % 平滑操作？
  
  
     % 4.3 ？？？变形和位移？
     innerCircle = 0.5*bsxfun(@rdivide, patientCircle, normrow(patientCircle));
-
     rootCircle = bsxfun(@minus, rEdgeVers, mergeCenter) * patientAxisTrans;
+    
+
     rootCircle = smooth_loop(rootCircle(:,1:2), 0.01);    
     temp = normrow(rootCircle);
     temp = repmat(temp,1, 2);
