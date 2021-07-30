@@ -23,6 +23,7 @@ printDir('ydir.obj', ydir, patientCenter);
 printDir('zdir.obj', zdir, patientCenter);
 patientAxisTrans = [xdir; ydir; zdir]';
     
+
 %% 4.连三角片 
 
     % 4.1 确定牙冠、牙根边缘信息：
