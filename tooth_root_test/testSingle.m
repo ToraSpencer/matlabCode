@@ -41,7 +41,7 @@ patientAxisTrans = [xdir; ydir; zdir]';
     OBJwriteVertices('rEdgeVers.obj', rEdgeVers);
     OBJwriteVertices('pEdgeVers.obj', pEdgeVers);
   
-    % 4.2 边缘点集投影到二维平面，然后平滑
+    % 4.2 边缘点集投影到二维平面
     mergeCenter = mean([pEdgeVers; rEdgeVers]);
     
     patientCircle = bsxfun(@minus, pEdgeVers, mergeCenter) * patientAxisTrans;
@@ -101,8 +101,8 @@ patientAxisTrans = [xdir; ydir; zdir]';
     % for debug
     tempOuter = [outerCircle, zeros(size(outerCircle, 1), 1)];
     tempInner = [innerCircle, zeros(size(innerCircle, 1), 1)];
-    OBJwriteVertices('tempInner.obj', tempInner);
-    OBJwriteVertices('tempOuter.obj', tempOuter);
+    OBJwriteVertices('映射为标准圆的tempInner.obj', tempInner);
+    OBJwriteVertices('映射为标准圆的tempOuter.obj', tempOuter);
     OBJwriteVertices('twoCircles.obj', [tempOuter; tempInner]);
 
     % 4.4 二维点集三角剖分
@@ -110,8 +110,11 @@ patientAxisTrans = [xdir; ydir; zdir]';
     edgeInPlane = [[1:innerCount; [2:innerCount,1]]'; [1:outerCount; [2:outerCount,1]]' + innerCount];
     versInPlane = [innerCircle; outerCircle];
     [~, trisInPlane] = triangle(versInPlane, edgeInPlane, mean(innerCircle), 'NoBoundarySteiners');
-    figure
-    drawMesh(versInPlane, trisInPlane);
+
+    % for debug
+    versInPlaneTemp = zeros(size(versInPlane, 1), 3);
+    versInPlaneTemp(:, 1 : 2) = versInPlane;
+    writeOBJ('三角剖分生成的圆环.obj', versInPlaneTemp, trisInPlane);
     
     % 4.5 牙冠和牙根融合
     finalVers = [patientCutVers; rootCutVers];
