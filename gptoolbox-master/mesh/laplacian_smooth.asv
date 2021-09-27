@@ -1,21 +1,20 @@
-function [vers,Uall] = laplacian_smooth(vers, tris, L_method, fixedVerIdx, lambda,method, S, max_iter)
+function [U,Uall] = laplacian_smooth(vers, tris, L_method, b, lambda,method, S, max_iter)
 
   % laplace平滑
 
-  % [vers] = laplacian_smooth(vers,F)
-  % [vers] = laplacian_smooth(vers,F,L_method,b,lambda,method,S)
-  % [vers,Uall] = laplacian_smooth(vers,F,L_method,b,lambda,method,S,max_iter)
+  % [U] = laplacian_smooth(V,F)
+  % [U] = laplacian_smooth(V,F,L_method,b,lambda,method,S)
+  % [U,Uall] = laplacian_smooth(V,F,L_method,b,lambda,method,S,max_iter)
 
   % Inputs:
-  %   vers  #V x 3 matrix of vertex coordinates
-  %   tris  #F x 3  matrix of indices of triangle corners
+  %   V  #V x 3 matrix of vertex coordinates
+  %   F  #F x 3  matrix of indices of triangle corners
   
   %   L_method  method for laplacian
   %      'uniform'
   %      'cotan'
   
-  %   fixedVerIdx  list of indices of fixed vertices
-  %   设定保持坐标不变的顶点的索引。可以设定边界不变。
+  %   b  list of indices of fixed vertices ？？？ 用例里面传入的是空向量。
   
   %   lambda  diffusion speed parameter {0.1}
   
@@ -26,7 +25,7 @@ function [vers,Uall] = laplacian_smooth(vers, tris, L_method, fixedVerIdx, lambd
   %   S  scalar fields to smooth (default V)
   
   % Outputs:
-  %   vers  #V x 3 list of new vertex positions
+  %   U  #V x 3 list of new vertex positions
   %   Uall  #V x 3 x iters 每一次迭代的结果。
   %   
 
@@ -41,11 +40,11 @@ function [vers,Uall] = laplacian_smooth(vers, tris, L_method, fixedVerIdx, lambd
   end
 
   if(~exist('lambda','var')) 
-    lambda = 0.1;           % 进行laplacian光顺的步长
+    lambda = 0.1; 
   end
 
-  if(~exist('fixedVerIdx','var'))
-    fixedVerIdx = [];
+  if(~exist('b','var'))
+    b = [];
   end
 
   % bulid sparse identity matrix
@@ -74,6 +73,7 @@ function [vers,Uall] = laplacian_smooth(vers, tris, L_method, fixedVerIdx, lambd
  
  % 平面图网格应该使用uniform laplacian
   if strcmp(L_method, 'uniform')
+
     A = adjacency_matrix(tris);
     L = A - diag(sum(A));               % uniform laplacian
   end
@@ -83,44 +83,40 @@ function [vers,Uall] = laplacian_smooth(vers, tris, L_method, fixedVerIdx, lambd
   sym = [];
 
   iter = 0;
-  vers = S;
-  vers_prev = S;
+  U = S;
+  U_prev = S;
   if nargout >= 2
     Uall = [];
   end 
 
-  % 一般的网格应该使用余切laplacian
-  if strcmp(L_method, 'cotan')
+  % 一般的网格余切laplacian
+  if strcmp(L_method,'cotan')
     L = cotmatrix_embedded(vers,tris);
   end
 
   
  %% 3. 迭代
-  while( iter < max_iter && (iter == 0 || max(abs(vers(:)-vers_prev(:)))>tol*h))
-    vers_prev = vers;
-    
+  while( iter < max_iter && (iter == 0 || max(abs(U(:)-U_prev(:)))>tol*h))
+    U_prev = U;
     switch method
     case 'implicit'
       Q = (I-lambda*L);
       % could prefactor Q for 'uniform' case
       for d = 1:size(S,2)
-        [vers(:,d), P] = min_quad_with_fixed(Q*0.5,-vers(:,d), fixedVerIdx, S(fixedVerIdx,d), [],[],P);
+        [U(:,d),P] = min_quad_with_fixed(Q*0.5,-U(:,d),b,S(b,d),[],[],P);
       end
-      
     case 'explicit'
       Q = (I+lambda*L);
-      vers = Q * vers;
-      % 设定保持不变的顶点：
-      vers(fixedVerIdx,:) = S(fixedVerIdx, :);
-      
+      U = Q * U;
+      % enforce boundary
+      U(b,:) = S(b,:);
     otherwise
       error(['' method ' is not a supported smoothing method']);
     end
 
     if nargout >= 2
-      Uall = cat(3,Uall,vers);
+      Uall = cat(3,Uall,U);
     end
-    
     iter = iter + 1;
   end
 

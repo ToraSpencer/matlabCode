@@ -30,6 +30,9 @@ writeOBJ('laplacian_smooth_iter_10.obj', vers_new_all(:, :, 10), tris);
 writeOBJ('laplacian_smooth_iter_15.obj', vers_new_all(:, :, 15), tris);
 writeOBJ('laplacian_smooth_iter_20.obj', vers_new, tris);
 
+disp('finished.');
 
+%%
+% 如果希望对一个面片网格使用laplacian光顺，并且希望外延保持不变：
 
 
