@@ -37,7 +37,7 @@ lights = camlight;              % 相机镜头发出的光照
 
 
 %% 颜色设置
-colormap(cbrewer('Blues', 500));
+% colormap(cbrewer('Blues', 500));
 
 
 
