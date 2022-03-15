@@ -16,6 +16,7 @@ colorValue = curvs-cmin;
 colorValue = colorValue/range;
 
 
+%%
 % tsurf(tris, vers, ....)——三维网格绘图接口
 figure(1)
 t = tsurf(tris, vers, 'CData', colorValue, shadingParams{:});
