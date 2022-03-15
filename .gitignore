@@ -8,7 +8,6 @@
 #指定不忽略的文件
 !/triangle.exe
 !*.m
-!*.gitignore
 !/gptoolbox-master/*
 !/几何处理/data/*
 !/tooth_root_test/data/*
