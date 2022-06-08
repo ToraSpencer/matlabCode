@@ -1,9 +1,6 @@
-function [V,F,Q] = cube(x,y,z)
-  % CUBE Construct a mesh of the unit cube. Sides are ordered like sides of a
-  % die (one of many dice).
-  %
-  % [V,F] = cube(x,y,z)
-  % 
+function [vers, tris, Q] = cube(x,y,z)
+  % CUBE Construct a mesh of the unit cube. 
+  % Sides are ordered like sides of a die (one of many dice).
   % Inputs:
   %   x  number of vertices along x-axis
   %   y  number of vertices along y-ayis
@@ -12,8 +9,7 @@ function [V,F,Q] = cube(x,y,z)
   %   V  x*y*z by 3 list of vertex positions
   %   F  #F by 3 list of triangle indices
   %   Q  #Q by 3 list of quad indices
-  %
-  % 
+
   if nargin<2
     y = x;
   end
@@ -22,25 +18,28 @@ function [V,F,Q] = cube(x,y,z)
   end
 
   sam = [x y;z y;x z;x z;z y;x y];
-  axes = [0 1 0;0 1 0;1 0 0;1 0 0;0 1 0;0 1 0];
+  axes = [0 1 0; 0 1 0; 1 0 0; 1 0 0; 0 1 0; 0 1 0];
   angles = [0 pi/2 pi/2 -pi/2 -pi/2 pi];
-  V = [];
-  F = [];
+  vers = [];
+  tris = [];
+  
   for s = 1:6
     [CV,CF] = create_regular_grid(sam(s,1),sam(s,2),0,0);
     CV(:,3) = 0;
     R = round(axisangle2matrix(axes(s,:),angles(s)));
-    F = [F;size(V,1)+CF];
-    V = [V;(CV-0.5)*R+0.5];
+    tris = [tris;size(vers,1)+CF];
+    vers = [vers;(CV-0.5)*R+0.5];
   end
-  Q = [F(1:2:end-1,[1 2]) F(2:2:end,[2 3])];
+  
+  Q = [tris(1:2:end-1,[1 2]) tris(2:2:end,[2 3])];
   
   % Should be able to do this procedurally
-  [V,~,J] = remove_duplicate_vertices(V,1e-12);
+  [vers,~,J] = remove_duplicate_vertices(vers,1e-12);
   Q = J(Q);
-  F = J(F);
+  tris = J(tris);
+  
   % oops inside out
-  F = fliplr(F);
+  tris = fliplr(tris);              % ·­×ªÈý½ÇÆ¬£»
   Q = fliplr(Q);
 
 end

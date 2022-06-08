@@ -30,9 +30,19 @@ OBJwriteVertices('afterSmooth2.obj', afterSmooth);
 
 %% IO接口：
 tooth =  Read_Obj('./data/tooth.obj');      
+
+% writeOBJ()——写OBJ文件；
 writeOBJ('newTooth.obj', tooth.vertex, tooth.face);
-OBJwriteVertices('toothVers.obj', toothVers);
+objWriteVertices('toothVers.obj', tooth.vertex);
  
+
+%% 生成基础图形：
+cubeMesh = struct('vertex',[],'face',[]);
+
+%   cube()——生成立方体网格；
+[cubeMesh.vertex, cubeMesh.face] = cube(3, 4, 5);
+writeOBJ('cube.obj', cubeMesh.vertex, cubeMesh.face);
+
  
 %% 画图
 clc;
