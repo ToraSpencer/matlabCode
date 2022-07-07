@@ -57,7 +57,7 @@ outputlabel = log10(outputlabel) + 1;
 if type == 1
     tic
     [useless, fidx] = min(V(F(:,1),3));
-    [Vout, Fout] = solve_self_intersection(V, F, fidx);
+    [Vout, Fout] = choose_tris(V, F, fidx);
     
 %     [Vout, Fout] = meshfix(Vout, Fout);
     fprintf('solve self intersection takes %f s time.\n', toc);

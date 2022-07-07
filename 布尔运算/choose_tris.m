@@ -1,44 +1,44 @@
-
-% 斌杰写的网格自相交处理
-function [versOut, trisOut] = solve_self_intersection(vers, tris, id)
+function [versOut, trisOut] = choose_tris(vers, tris, id)
     % 消除网格自相交
     versCount = size(vers, 1);
     trisCount = size(tris,1);
     
     % 1. 构建网格邻接关系
-    edges = [tris(:,2) tris(:,3); tris(:,3) tris(:,1); tris(:,1) tris(:,2)];
-    edgesIdx = (1:3 * trisCount)';           % 边的索引，列向量；
+    edges = [tris(:,2) tris(:,3); tris(:,3) tris(:,1); tris(:,1) tris(:,2)];    % 有向边，与三角片正法向对应；
+    edgesIdx = (1:3 * trisCount)';           % 有向边的索引，列向量；
     
     Ei = sparse(edges(:,1), edges(:,2), 1);                    
-    unadj = Ei > 0;                                 % 顶点邻接矩阵；
-    nonadj = unadj - unadj';                    % 顶点非邻接矩阵；
+    adjSM = Ei > 0;                                 % 顶点有向邻接矩阵；下标(i, j)的元素为true == 存在有向边(i, j);
+    nonDlSM = adjSM - adjSM';            % 非双向边信息；  
+    adjSM2 = adjSM + nonDlSM;         % 0表示无边，1表示是双向边，2和-1表示单向边；
+    adjSM3 = Ei + Ei';                              % 0表示无边，1表示单向边，2表示双向边；
     
     % (i,j) > 0代表该有向边ij存在，(i,j)的值代表该有向边ij所关联的三角片数量
      % (i,j) > 0代表该有向边ij为边界边，(i,j)的值应该只有1或-1
-    [ii, jj, k1] = find(unadj + nonadj);
-    [ii, jj, k2] = find(Ei + Ei');          % (i,j)的值代表该无向边ij所关联的三角片数量
+    [ii, jj, k1] = find(adjSM2);
+    [ii, jj, k2] = find(adjSM3);          
     
     Ef = sparse(edges(:,1), edges(:,2), edgesIdx);          % 顶点邻接矩阵，权重为边的索引；
     adj = ( ...
         sparse(ii, jj, k1==1, size(Ef,1), size(Ef,2)) & ...
         sparse(ii, jj, k2<=2, size(Ef,1), size(Ef,2))).*Ef;     % 非边界并且流形边，(i,j)的值代表该有向边ij的编号
     
-    [ii, jj, si] = find(adj); % si的值代表边的编号
-    [ii, jj, v] = find(adj'); % v的值代表对面边的编号
+    [ii, jj, si] = find(adj);                   % si的值代表边的编号
+    [ii, jj, v] = find(adj');                   % v的值代表对面边的编号
     
-    E2F = repmat(1:trisCount,1,3)'; % 由边的编号索引到三角片的索引
+    E2F = repmat(1:trisCount,1,3)';      % 由边的编号索引到三角片的索引
     
-    Fp = -ones(3*trisCount,1); % 初始邻接关系设置为-1
+    Fp = -ones(3*trisCount,1);      % 初始邻接关系设置为-1
     Fp(si) = E2F(v);
     Fp = reshape(Fp, trisCount, 3); % 三角片每条流形边的邻接三角片的索引
     
-    [ii, jj] = find(Ei == 2); % 查找非流形边集合
+    [ii, jj] = find(Ei == 2);           % 查找非流形边集合
     [sel, k3] = ismember(edges, [ii, jj], 'rows');
-    k3 = k3(sel);               % 查找非流形边在非流形边集合中的位置
-    neid = edgesIdx(sel);            % 查找非流形边的编号
+    k3 = k3(sel);                       % 查找非流形边在非流形边集合中的位置
+    neid = edgesIdx(sel);                % 查找非流形边的编号
     [sel, k4] = ismember(edges, [jj, ii], 'rows'); % 查找非流形边邻接的三角片索引
-    k4 = k4(sel);           % 查找非流形邻接边在非流形边集合中的位置
-    nfid = E2F(sel);            % 查找非流形边的邻接三角片的索引
+    k4 = k4(sel);                           % 查找非流形邻接边在非流形边集合中的位置
+    nfid = E2F(sel);                         % 查找非流形边的邻接三角片的索引
     [useless, reidx] = sort(k4);
     nfid = reshape(nfid(reidx)', 2, [])';
     

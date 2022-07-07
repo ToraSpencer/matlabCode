@@ -157,6 +157,12 @@ m3 = nonzeros(sm1);
 % nzmax()—— 返回为稀疏矩阵的非零项分配的存储空间量。
 size = nzmax(sm1);
 
+% [row, col, value] = find(spM) ——获得稀疏矩阵中非零元素的信息；
+elemInfo.row = [];
+elemInfo.col = [];
+elemInfo.value = [];
+[elemInfo.row, elemInfo.col, elemInfo.value] = find(sm1);
+
 
 
 %%

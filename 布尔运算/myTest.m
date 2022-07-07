@@ -49,18 +49,21 @@ tic
 [status,result] = system('runme.bat');
 fprintf('mesh arrangement takes %f s time.\n', toc);
 
-
-%% 最终结果输出
-% 读取mesh arrangement结果
-[V, F] = readOBJfast('output.obj');
+[vers, tris] = readOBJfast('output.obj');
 outputlabel = load('outputlabel.txt');
 outputlabel = log10(outputlabel) + 1;
 
 
+%% 处理自相交——舍弃内部三角片，只去外层三角片，获得union结果；
 if type == 1
     tic
-    [useless, fidx] = min(V(F(:,1),3));
-    [Vout, Fout] = solve_self_intersection(V, F, fidx);
+    
+    temp = tris(:, 1);
+    temp = vers(temp,3);
+    [~, fidx] = min(temp);          % 网格中z坐标最小的顶点所在的三角片索引，貌似是刻意选一个交叉部分以外的三角片；
+    theTri = tris(fidx, :);
+    objWriteVertices('chosenVer.obj', vers(theTri', :));
+    [Vout, Fout] = choose_tris(vers, tris, fidx);
     
 %     [Vout, Fout] = meshfix(Vout, Fout);
     fprintf('solve self intersection takes %f s time.\n', toc);
