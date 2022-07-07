@@ -144,9 +144,6 @@ valueList = [ 1 4
               3 6 ];        
 sm4 = sparse(rowInfo, colInfo, valueList, 6, 6);
 
-%%
-
-
 %   full()¡ª¡ªÓÉÏ¡Êè¾ØÕóµÃµ½³íÃÜ¾ØÕó¡£
 m11 = full(sm1);
 m2 = full(sm2);

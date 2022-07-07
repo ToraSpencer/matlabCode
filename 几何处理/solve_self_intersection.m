@@ -2,23 +2,26 @@
 % 斌杰写的网格自相交处理
 function [versOut, trisOut] = solve_self_intersection(vers, tris, id)
     % 消除网格自相交
+    versCount = size(vers, 1);
     trisCount = size(tris,1);
     
     % 1. 构建网格邻接关系
-    E = [tris(:,2) tris(:,3); tris(:,3) tris(:,1); tris(:,1) tris(:,2)];
+    edges = [tris(:,2) tris(:,3); tris(:,3) tris(:,1); tris(:,1) tris(:,2)];
+    edgesIdx = (1:3 * trisCount)';           % 边的索引，列向量；
     
-    Eid = (1:3 * trisCount)'; % 三角片边的编号
-    Ef = sparse(E(:,1), E(:,2), Eid);
-    Ei = sparse(E(:,1), E(:,2), 1);
+    Ei = sparse(edges(:,1), edges(:,2), 1);                    
+    unadj = Ei > 0;                                 % 顶点邻接矩阵；
+    nonadj = unadj - unadj';                    % 顶点非邻接矩阵；
     
-    unadj = Ei > 0;                 % (i,j) > 0代表该有向边ij存在，(i,j)的值代表该有向边ij所关联的三角片数量
-    nonadj = unadj - unadj'; % (i,j) > 0代表该有向边ij为边界边，(i,j)的值应该只有1或-1
-    
+    % (i,j) > 0代表该有向边ij存在，(i,j)的值代表该有向边ij所关联的三角片数量
+     % (i,j) > 0代表该有向边ij为边界边，(i,j)的值应该只有1或-1
     [ii, jj, k1] = find(unadj + nonadj);
-    [ii, jj, k2] = find(Ei + Ei'); % (i,j)的值代表该无向边ij所关联的三角片数量
+    [ii, jj, k2] = find(Ei + Ei');          % (i,j)的值代表该无向边ij所关联的三角片数量
+    
+    Ef = sparse(edges(:,1), edges(:,2), edgesIdx);          % 顶点邻接矩阵，权重为边的索引；
     adj = ( ...
         sparse(ii, jj, k1==1, size(Ef,1), size(Ef,2)) & ...
-        sparse(ii, jj, k2<=2, size(Ef,1), size(Ef,2))).*Ef; % 非边界并且流形边，(i,j)的值代表该有向边ij的编号
+        sparse(ii, jj, k2<=2, size(Ef,1), size(Ef,2))).*Ef;     % 非边界并且流形边，(i,j)的值代表该有向边ij的编号
     
     [ii, jj, si] = find(adj); % si的值代表边的编号
     [ii, jj, v] = find(adj'); % v的值代表对面边的编号
@@ -30,10 +33,10 @@ function [versOut, trisOut] = solve_self_intersection(vers, tris, id)
     Fp = reshape(Fp, trisCount, 3); % 三角片每条流形边的邻接三角片的索引
     
     [ii, jj] = find(Ei == 2); % 查找非流形边集合
-    [sel, k3] = ismember(E, [ii, jj], 'rows');
+    [sel, k3] = ismember(edges, [ii, jj], 'rows');
     k3 = k3(sel);               % 查找非流形边在非流形边集合中的位置
-    neid = Eid(sel);            % 查找非流形边的编号
-    [sel, k4] = ismember(E, [jj, ii], 'rows'); % 查找非流形边邻接的三角片索引
+    neid = edgesIdx(sel);            % 查找非流形边的编号
+    [sel, k4] = ismember(edges, [jj, ii], 'rows'); % 查找非流形边邻接的三角片索引
     k4 = k4(sel);           % 查找非流形邻接边在非流形边集合中的位置
     nfid = E2F(sel);            % 查找非流形边的邻接三角片的索引
     [useless, reidx] = sort(k4);
