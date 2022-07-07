@@ -7,3 +7,5 @@ close all;
 writeOBJ('cube.obj', V, F);
 
 disp('finished.');
+ 
+ 

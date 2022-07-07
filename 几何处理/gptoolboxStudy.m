@@ -28,6 +28,7 @@ temp2 = A2\B2;
 OBJwriteVertices('afterSmooth2.obj', afterSmooth);
 
 
+
 %% IO½Ó¿Ú£º
 tooth =  Read_Obj('./data/tooth.obj');      
 
@@ -77,4 +78,14 @@ bdry =  detect_mesh_holes_and_boundary(tris);
 holeVersIdx = bdry{1,1};
 holeVers = vers(holeVersIdx, :);
 objWriteVertices('ÇÐ¸îÑÀ¹ÚµÄ¶´.obj', holeVers);
+
+
+%%
+ clc;
+ clear all;
+
+[cubeMesh.vertex, cubeMesh.face] = cube(3, 4, 5);
+writeOBJ('cube.obj', cubeMesh.vertex, cubeMesh.face);
+
+ret = connected_components(cubeMesh.face);
 

@@ -3,7 +3,7 @@
 *.png
 *.pdf
 *.jpg
- 
+*.stl
 
 #指定不忽略的文件
 !/triangle.exe
@@ -11,6 +11,7 @@
 !/gptoolbox-master/*
 !/几何处理/data/*
 !/tooth_root_test/data/*
+!/布尔运算/myData/*
 
 
 
