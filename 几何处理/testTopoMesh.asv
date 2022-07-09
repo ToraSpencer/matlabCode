@@ -35,7 +35,7 @@ elemInfo.col = [];
 elemInfo.value = [];
 [elemInfo.row, elemInfo.col, elemInfo.value] = find(nonDlSM2);
 bdryEdges = [elemInfo.row, elemInfo.col];
-objWriteEdges('bdryEdges.obj', bdryEdges, vers2);
+objWriteEdges('bdryEdges,o', bdryEdges, vers2);
 
 % 
 elemInfo22.row = [];

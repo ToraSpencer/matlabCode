@@ -87,5 +87,8 @@ objWriteVertices('ÇÐ¸îÑÀ¹ÚµÄ¶´.obj', holeVers);
 [cubeMesh.vertex, cubeMesh.face] = cube(3, 4, 5);
 writeOBJ('cube.obj', cubeMesh.vertex, cubeMesh.face);
 
+edges = [1,2; 2,3; 3,4; 8,9; 9,10; 11,12];
+objWriteEdges('cubeEdges.obj', edges, cubeMesh.vertex);
+
 ret = connected_components(cubeMesh.face);
 

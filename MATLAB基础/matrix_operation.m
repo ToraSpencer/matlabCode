@@ -8,6 +8,27 @@ m3 = m1*m2;
 temp1 = m3/m2;          % 右除： m1 == m3/m2 == m3 * inv(m2);
 temp2 = m1\m3;          % 左除： m2 == m1\m3 == inv(m1)*m3;
 
+
+%% 矩阵数据的增删查改：
+
+% min(), max()——查找最值；
+clc;
+clear all;
+vec1 = [8.1, 7.3, 6.2, 5.5, 4.4, 3.1, 2.5, 1.1];
+[value, index] = min(vec1);
+ 
+% [row, col, value] = find(M) ——获得矩阵中非零元素的信息；
+M1 =  [0, 8.1, 7.3; 6.2, 0, 4.4; -3.1, 2.5, 1.1];
+elemInfo.row = [];
+elemInfo.col = [];
+elemInfo.value = [];
+[elemInfo.row, elemInfo.col, elemInfo.value] = find(M1);
+
+% [row, col, value] = find(元素条件) —— 获得矩阵中满足条件的元素的信息；
+% [row, col] = find(元素条件)  
+[elemInfo.row, elemInfo.col, elemInfo.value] = find(M1 < 0);        % 这里的value是逻辑值1
+
+
 %% 使用左除解线性方程组：
 % 3x+y = 1; 2x-y = 2; 
 clc;
@@ -20,11 +41,14 @@ disp(x1);
 disp(x2);
 
 
+
 %% 基本变换
 
 
 
 %% 高级运算
+
+
 
 %%    范数
 %               n = norm(X), 返回矩阵X的2范数，即sqrt(x1^2+x2^2+x3^2 ....);
@@ -101,6 +125,7 @@ disp(D * inv(P) * L * U * inv(Q) );
 disp(D);
 
 
+
 %% 奇异值分解——svd()
 clc;
 clear all;
@@ -114,65 +139,14 @@ disp(V);
 
 %       s = svd(A) 以降序顺序返回矩阵 A 的奇异值。
 
-%% 稀疏矩阵
 
-%   sparse()——由稠密矩阵得到稀疏矩阵。
-%%
+%% 索引矩阵：
 clc;
 clear all;
-m1 = [ 0   0   0   5
-      0   2   0   0
-      1   3   0   0
-      0   0   4   0];
-sm1 = sparse(m1);
-rowInfo = [1,2,3];
-colInfo = [3,4,5];
-valueList = [0.1, 0.2, 0.3];
-sm2 = sparse(rowInfo, colInfo, valueList, 5, 6);
 
-rowInfo = [1,2,3,4,5,6];
-colInfo = [1,2,3,4,5,6];
-valueList = [ 1 4
-              2 5
-              3 6 ];          % 取元素的时候列优先
-sm3 = sparse(rowInfo, colInfo, valueList, 6, 6);
+% 矩阵的条件表达式返回一个索引矩阵，其中满足条件的元素为1，不满足的为0；
+M1 =  [0, 8.1, 7.3; 6.2, 0, 4.4; -3.1, 2.5, 1.1];
+IM1 = (M1 < 0);     
+M2 = M1.*IM1;               % 与逻辑矩阵点乘，可以筛选元素；
 
-rowInfo = [1,1,3,4,5,5];
-colInfo = [1,1,3,4,5,5];      % 相同行列信息的值累加 
-valueList = [ 1 4
-              2 5
-              3 6 ];        
-sm4 = sparse(rowInfo, colInfo, valueList, 6, 6);
-
-%   full()——由稀疏矩阵得到稠密矩阵。
-m11 = full(sm1);
-m2 = full(sm2);
-
-% nnz()—— 返回稀疏矩阵中的非零元素数。
-nonZero = nnz(sm1);
  
-% nonzeros()—— 返回 稀疏矩阵的所有非零元素，存储在一个列向量内。
-m3 = nonzeros(sm1);
-
-% nzmax()—— 返回为稀疏矩阵的非零项分配的存储空间量。
-size = nzmax(sm1);
-
-% [row, col, value] = find(spM) ——获得稀疏矩阵中非零元素的信息；
-elemInfo.row = [];
-elemInfo.col = [];
-elemInfo.value = [];
-[elemInfo.row, elemInfo.col, elemInfo.value] = find(sm1);
-
-
-
-%%
-clc;
-clear all;
-m1 = [11,12,13,14;21,22,23,24; 31,32,33,34];
-v1 = [1,2,3];
-v2 = [3,4];
-m2 = m1(v1, v2);
-disp(m2);
-
-V = v1'*v2;
-disp(V);
