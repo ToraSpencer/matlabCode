@@ -6,7 +6,7 @@ dbstop if error
 
 %%
 type = 1;           % 1:Union 2:Intersection 3:Difference
-path = 'data\data1\'; % data1: 原型
+path = 'data\data1\';           % data1: 原型
 file = dir([path, '*.obj']);
 nfile = length(file);
 model = cell(2,nfile);

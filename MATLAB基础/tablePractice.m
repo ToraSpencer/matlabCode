@@ -29,6 +29,7 @@ disp('表头为：');
 disp(temp1);
 disp(class(temp1));
 
+
 %%
 %使用圆括号来访问表对象的数据，返回table
 temp = reportCard(1,:);
