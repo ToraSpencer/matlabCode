@@ -60,37 +60,56 @@ end
 %1. 逆仿射变换，将牙齿中心点变换到牙颌坐标系；
 teethCenterJC = bsxfun(@minus, teethCenter, dentalCenter) * dentalFrame;    
 
-%2. 牙齿中心点拟合椭圆：
-coff = fit_ellipse(teethCenterJC(:,1), teethCenterJC(:,2), 'standard');
-ax_o = [-coff(3)/(2*coff(1)), -coff(4)/(2*coff(2))];            % 椭圆中心坐标；
-temp = coff(3)*coff(3)/(4*coff(1)) + coff(4)*coff(4)/(4*coff(2)) - coff(5);
-ax_l = sqrt(temp/coff(1));
-ax_s = sqrt(temp/coff(2));
+%2. 牙齿中心点拟合椭圆——标准椭圆（没有相对坐标轴旋转）a*x^2 + c*y^2 + d*x + e*y + f = 0;
+sampleVers = teethCenterJC(:, 1:2);
+coff = fit_ellipse(sampleVers(:,1), sampleVers(:,2), 'standard');
+a = coff(1);
+c = coff(2);
+d = coff(3);
+e = coff(4);
+f = coff(5);
+
+center = [-d/(2*a), -e/(2*c)];            % 椭圆中心坐标；
+p = d^2/(4*a) + e^2/(4*c) - f;
+a0 = sqrt(p/a);
+b0 = sqrt(p/c);
 
 step = (-pi/2:0.01:3*pi/2)';
-elliJC = [ax_l*cos(step), ax_s*sin(step)];
-elliJC = bsxfun(@plus, elliJC, ax_o);
+elliJC = [a0*cos(step), b0*sin(step)];
+elliJC = bsxfun(@plus, elliJC, center);
+
+if(0)
+    figure
+    hold on
+    scatter(sampleVers(:,1), sampleVers(:,2), 'r');
+    scatter(elliJC(:, 1), elliJC(:, 2), 'b');
+end
+
 
 % 3. 拟合椭圆采样：均匀选取两端牙齿之间的点..
-idx1 = knnsearch(elliJC, (teethCenterJC(1,1:2) + [-teethCenterJC(teethCount,1), teethCenterJC(teethCount,2)])/2);
+startVer = (sampleVers(1,:) + [-sampleVers(teethCount,1), sampleVers(teethCount,2)])/2;
+idx1 = knnsearch(elliJC, startVer);                 % 拟合椭圆上距离startVer最近的点的索引；
 idx2 = knnsearch(step, pi-step(idx1));
 sel = round(linspace(idx1, idx2, 14));
-elliSamVersJC = elliJC(sel,:);        
+targetVersJC = elliJC(sel,:);        
+objWriteVertices('target1.obj', [elliJC(idx1, :), 0]);
+objWriteVertices('target2.obj', [elliJC(idx2, :), 0]);
 
 if(debugFlag == 1)
-    objWriteVertices('teethCenterJC.obj', teethCenterJC);
+    objWriteVertices('sampleVers.obj', teethCenterJC);
     objWriteVertices('拟合椭圆.obj', [elliJC, zeros(size(elliJC, 1), 1)]);
-    objWriteVertices('拟合椭圆采样点.obj', [elliSamVersJC, zeros(size(elliSamVersJC, 1), 1)]);
+    objWriteVertices('控制目标点.obj', [targetVersJC, zeros(size(targetVersJC, 1), 1)]);
 end
 
 
 %% 标准颌骨变形，转换到全局坐标系
 % 计算权重
-weight = bsxfun(@minus, aveBone.vers(:,1:2), reshape(conVers(:,1:2)', [1 2 14]));
+temp = reshape(conVers(:,1:2)', [1 2 14]);
+weight = bsxfun(@minus, aveBone.vers(:,1:2), temp);
 weight = sum(weight.^2, 2)/1000;
 weight = exp(-weight);
 weight = bsxfun(@rdivide, weight, sum(weight,3));
-arrows = (elliSamVersJC - conVers(:,1:2))';         % 控制点指向椭圆采样点的二维列向量，存储成矩阵；
+arrows = (targetVersJC - conVers(:,1:2))';         % 控制点指向椭圆采样点的二维列向量，存储成矩阵；
 tempMat = reshape(arrows, 1, 2, teethCount);
 transMat = bsxfun(@times, tempMat, weight);
 

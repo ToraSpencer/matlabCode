@@ -20,20 +20,12 @@ disp(v);
 clc;
 clear all;
 x = 1:100;
-y = 0.1*(x-35).^2 + 10;
+y = (x-35).^2 + 10;
+
 
 figure('Name', 'xy graph');     
-
-% plot()——画折线图
+% plot()——画
 plot(x, y, 'b-*');
-hold on                  % 保留当前坐标区中的绘图，从而使新添加到坐标区中的绘图不会删除现有绘图;
-
-% scatter() ——画散点图
-x1 = 10*[1: 10];
-y1 = -0.1*(x1-40).^2 + 30;
-y2 = y1-30;
-scatter(x1, y1, 'r');                       % 画的点默认是空心圆；
-scatter(x1, y2, 'g', 'filled');             % filled指定画的点为实心圆；
 
 
 %% 读写.dat文件
