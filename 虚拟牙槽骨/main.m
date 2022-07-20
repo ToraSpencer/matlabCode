@@ -28,7 +28,7 @@ conVers = [                 % 标准牙槽骨的控制点。
 conVers = conVers(end:-1:1,:);
 
 dentalCenter = handle.dentalCenter;
-dentalFrame = handle.dentalFrame;
+rotation = handle.dentalFrame;
 toothdata = handle.model.toothdata;
 
 teethCount = size(toothdata,2);
@@ -49,20 +49,19 @@ if(debugFlag == 1)
     tooth.rTris = toothdata{10, 1};
     writeOBJ('tooth1.obj', tooth.vers, tooth.tris);
     writeOBJ('rootTooth1.obj', tooth.rVers, tooth.rTris);
-    objWriteVertices('dentalFrame.obj', dentalFrame);
     objWriteVertices('dentalCenter.obj', dentalCenter);
-    objWriteVertices('toothCenter.obj', teethCenter);
+    objWriteVertices('teethCenter.obj', teethCenter);
 end
     
 
 %% 将牙齿中心转换到牙颌xy平面上并用标准椭圆拟合
 
 %1. 逆仿射变换，将牙齿中心点变换到牙颌坐标系；
-teethCenterJC = bsxfun(@minus, teethCenter, dentalCenter) * dentalFrame;    
+teethCenterJC = bsxfun(@minus, teethCenter, dentalCenter) * rotation;    
 
 %2. 牙齿中心点拟合椭圆——标准椭圆（没有相对坐标轴旋转）a*x^2 + c*y^2 + d*x + e*y + f = 0;
-sampleVers = teethCenterJC(:, 1:2);
-coff = fit_ellipse(sampleVers(:,1), sampleVers(:,2), 'standard');
+sampleVersJC = teethCenterJC(:, 1:2);
+coff = fit_ellipse(sampleVersJC(:,1), sampleVersJC(:,2), 'standard');
 a = coff(1);
 c = coff(2);
 d = coff(3);
@@ -87,7 +86,7 @@ end
 
 
 % 3. 拟合椭圆中提取控制目标点：均匀选取两端牙齿之间的点..
-startVer = (sampleVers(1,:) + [-sampleVers(teethCount,1), sampleVers(teethCount,2)])/2;
+startVer = (sampleVersJC(1,:) + [-sampleVersJC(teethCount,1), sampleVersJC(teethCount,2)])/2;
 idx1 = knnsearch(elliJC, startVer);                 % 拟合椭圆上距离startVer最近的点的索引；
 idx2 = knnsearch(step, pi-step(idx1));
 sel = round(linspace(idx1, idx2, 14));      % 区间内均匀地选取14个点；
@@ -109,23 +108,46 @@ end
 % arrows = bsxfun(@minus, aveBone.vers(:,1:2), conVersMat);   % 三维矩阵，网格顶点到每一个控制点的向量；
 % arrowsLen = sum(arrows.^2, 2)/1000;
 % weight = exp(-arrowsLen);
-% weight = bsxfun(@rdivide, weight, sum(weight,3));
+% % 归一化：
+% weight = bsxfun(@rdivide, weight, sum(weight,3));    % rdivide(A, B) == A./B
 % conArrows = (targetVersJC - conVers(:,1:2))';         % 控制点指向椭圆采样点的二维列向量，存储成矩阵；
-% tempMat = reshape(conArrows, 1, 2, teethCount);
-% transMat = bsxfun(@times, tempMat, weight);
+% conArrowsMat = reshape(conArrows, 1, 2, teethCount);
+% offsetMat = bsxfun(@times, conArrowsMat, weight);
+% % 变形——只改写标准牙槽骨顶点的xy坐标值；
+% aveBone.vers(:,1:2) = sum(offsetMat, 3) + aveBone.vers(:,1:2);
+% % 变换到global坐标系；
+% aveBone.vers = bsxfun(@plus, aveBone.vers * dentalFrame', dentalCenter);
 
-% 尝试不用三维矩阵计算权重：
-arrowsLen = zeros(size(aveBone.vers, 1), 14);
+
+%% 尝试不用三维矩阵计算权重：
+versCount = size(aveBone.vers, 1);
+arrowsLen = zeros(versCount, 14);
 for i = 1: 14
-    conVerMat = repmat();
+    conVersMat = repmat(conVers(i, 1:2), versCount, 1);
+    arrows = aveBone.vers(:, 1:2) - conVersMat;
+    arrowsLen(:, i) = sum(arrows.^2, 2)/1000;
 end
 
+% 计算偏移向量的权重，每个网格顶点相对于每个控制点都有一个权重值，总共有versCount * 14个；
+weights = exp(-arrowsLen);
 
-% 变形——只改写标准牙槽骨顶点的xy坐标值；
-aveBone.vers(:,1:2) = sum( transMat, 3) + aveBone.vers(:,1:2);
+%   列向量归一化：
+sumCol = sum(weights, 2);
+sumMat = repmat(sumCol, 1, 14);
+weights = weights./sumMat;                  
+
+conArrows = targetVersJC - conVers(:, 1:2);     % 控制点指向控制目标点的向量；
+offsetMatsArr = zeros(versCount, 2, 14);        % 14层，第i层是第i个控制点确定的所有网格顶点的偏移向量；
+for i = 1:14
+    arrow = conArrows(i, :);
+    conArrowsMat = repmat(arrow, versCount, 1);
+    offsetMatsArr(:, :, i) = bsxfun(@times, conArrowsMat, weights(:, i));
+end
+offsetArrows = sum(offsetMatsArr, 3);       % 最终的偏移向量为14个偏移向量的加和；
+aveBone.vers(:,1:2) = aveBone.vers(:,1:2) + offsetArrows;
 
 % 变换到global坐标系；
-aveBone.vers = bsxfun(@plus, aveBone.vers * dentalFrame', dentalCenter);
+aveBone.vers = bsxfun(@plus, aveBone.vers * rotation', dentalCenter);
 
 
 %% 写输出数据：

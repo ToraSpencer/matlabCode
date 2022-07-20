@@ -8,6 +8,7 @@ vec2 = [1:0.5:11];
 % linspace(起点, 终点，点数)
 vec3 = linspace(0, 10, 21);
 
+
 %% 基本运算
 % 右除/  左除\
 clc;
@@ -17,6 +18,12 @@ m2 = rand(3,3);
 m3 = m1*m2;
 temp1 = m3/m2;          % 右除： m1 == m3/m2 == m3 * inv(m2);
 temp2 = m1\m3;          % 左除： m2 == m1\m3 == inv(m1)*m3;
+
+% sum()——求和
+m1 = ones(3, 4);
+v1 = sum(m1);               % 默认为sum(m, 1)
+v2 = sum(m1, 1);           % 按列求和，压成行； 
+v3 = sum(m1, 2);            % 按行求和，压成列；
 
 
 %% 矩阵数据的增删查改：
@@ -39,6 +46,7 @@ elemInfo.value = [];
 [elemInfo.row, elemInfo.col, elemInfo.value] = find(M1 < 0);        % 这里的value是逻辑值1
 
 
+
 %% 使用左除解线性方程组：
 % 3x+y = 1; 2x-y = 2; 
 clc;
@@ -51,6 +59,7 @@ disp(x1);
 disp(x2);
 
 
+
 %% 矩阵的基本变换
 clc;
 clear all;
@@ -59,6 +68,10 @@ mat1 = reshape(vec, 4, 5);
 mat2 = transpose(mat1);             % transpose(), m'——求转置
 mat22 = mat1';
 mat3 = inv(rand(3,3));                   % inv()——求逆
+
+% repmat()——矩阵复制扩张：
+mat1 = repmat(99, 5, 6);                        % 后两位是复制的行列数；
+mat2 = repmat([66, 77; 88, 99], 3, 4);
 
 
 

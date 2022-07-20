@@ -5,6 +5,11 @@
 *.jpg
 *.stl
 
+# 貌似是matlab的缓存文件；
+*.asv
+
+
+
 #指定不忽略的文件
 !/triangle.exe
 !*.m
