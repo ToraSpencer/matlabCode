@@ -86,11 +86,11 @@ if(0)
 end
 
 
-% 3. 拟合椭圆采样：均匀选取两端牙齿之间的点..
+% 3. 拟合椭圆中提取控制目标点：均匀选取两端牙齿之间的点..
 startVer = (sampleVers(1,:) + [-sampleVers(teethCount,1), sampleVers(teethCount,2)])/2;
 idx1 = knnsearch(elliJC, startVer);                 % 拟合椭圆上距离startVer最近的点的索引；
 idx2 = knnsearch(step, pi-step(idx1));
-sel = round(linspace(idx1, idx2, 14));
+sel = round(linspace(idx1, idx2, 14));      % 区间内均匀地选取14个点；
 targetVersJC = elliJC(sel,:);        
 objWriteVertices('target1.obj', [elliJC(idx1, :), 0]);
 objWriteVertices('target2.obj', [elliJC(idx2, :), 0]);
@@ -102,16 +102,24 @@ if(debugFlag == 1)
 end
 
 
-%% 标准颌骨变形，转换到全局坐标系
-% 计算权重
-temp = reshape(conVers(:,1:2)', [1 2 14]);
-weight = bsxfun(@minus, aveBone.vers(:,1:2), temp);
-weight = sum(weight.^2, 2)/1000;
-weight = exp(-weight);
-weight = bsxfun(@rdivide, weight, sum(weight,3));
-arrows = (targetVersJC - conVers(:,1:2))';         % 控制点指向椭圆采样点的二维列向量，存储成矩阵；
-tempMat = reshape(arrows, 1, 2, teethCount);
-transMat = bsxfun(@times, tempMat, weight);
+%% 标准颌骨变形——控制点位移到控制目标点的位置，周围其他顶点也做相应的位移；
+
+% % 计算权重
+% conVersMat = reshape(conVers(:,1:2)', [1 2 14]); % 三维矩阵，14层，每一层是一个控制点坐标；
+% arrows = bsxfun(@minus, aveBone.vers(:,1:2), conVersMat);   % 三维矩阵，网格顶点到每一个控制点的向量；
+% arrowsLen = sum(arrows.^2, 2)/1000;
+% weight = exp(-arrowsLen);
+% weight = bsxfun(@rdivide, weight, sum(weight,3));
+% conArrows = (targetVersJC - conVers(:,1:2))';         % 控制点指向椭圆采样点的二维列向量，存储成矩阵；
+% tempMat = reshape(conArrows, 1, 2, teethCount);
+% transMat = bsxfun(@times, tempMat, weight);
+
+% 尝试不用三维矩阵计算权重：
+arrowsLen = zeros(size(aveBone.vers, 1), 14);
+for i = 1: 14
+    conVerMat = repmat();
+end
+
 
 % 变形——只改写标准牙槽骨顶点的xy坐标值；
 aveBone.vers(:,1:2) = sum( transMat, 3) + aveBone.vers(:,1:2);

@@ -1,6 +1,7 @@
 clc;
 clear all;
 close all;
+
 %%
 load('./data/elliSampleVers.mat');
 x0 = sampleVers(:, 1);
@@ -10,8 +11,17 @@ figure
 scatter(x0, y0, 'r', 'filled');
 hold on
 
-% alpha = [x^2, y^2, x, y, 1]; A = [alpha1; alpha2; .... alpham]
- A = [x0.*x0, y0.*y0, x0, y0, ones(sampleCount, 1)];
+%% 最小二乘法拟合椭圆：
+%  标准椭圆方程：a*x^2 + c*y^2 + d*x + e*y + f  = 0，其中a*c > 0
+%   alpha = [x^2, y^2, x, y, 1]; 样本信息矩阵：A = [alpha1; alpha2; .... alpham]
+
+A = [x0.*x0, y0.*y0, x0, y0, ones(sampleCount, 1)];       
+% 标准椭圆方程可写为A*x = 0; x = [a,c,d,e,f];
+% 最小二乘法拟合椭圆本质上是在a*c>0的约束下求A*x = 0最优解；
+% 法线方程：A'*A*x = 0;
+% 余项：r = -A*x;
+ 
+ %%
  B = zeros(5, 5);
  B(1, 2) = 1;
  B(2, 1) = 1;
@@ -35,7 +45,6 @@ for i = 1 : size(elemInfo.col)
     end
 end
 
- % 标准椭圆方程：k*(a*x^2 + c*y^2 + d*x + e*y + f )= 0; k是缩放因子，不为0的常数；
  a = eigenVec(1);
  c = eigenVec(2);
  d = eigenVec(3);
