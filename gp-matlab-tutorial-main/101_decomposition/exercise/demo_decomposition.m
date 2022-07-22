@@ -13,7 +13,7 @@ LHS = A - t*Lc;
 G = grad(V,F); % #F*dim by #V
 D = div(V,F); % #V by #F*dim
 
-% prefactorization
+% prefactorization； decomposition()——matlab函数，分解矩阵，MATLAB2017b之后的版本才引入；
 preLHS = decomposition(LHS);
 preLc = decomposition(Lc);
 

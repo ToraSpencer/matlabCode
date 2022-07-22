@@ -7,7 +7,7 @@ debugFlag = 1;
 aveBone.vers = [];
 aveBone.tris = [];
 conVers = [];
-isUpper = 0;
+isUpper = 1;
 
 if(1 == isUpper)
      load('inputData/dataUpper.mat');
@@ -72,6 +72,8 @@ if(debugFlag == 1)
     writeOBJ('standardMesh.obj', aveBone.vers, aveBone.tris);
     objWriteVertices('dentalCenter.obj', dentalCenter);
     objWriteVertices('teethCenter.obj', glCenters);
+    objWriteVertices('glCenters1.obj', glCenters(1,:));
+    objWriteVertices('glCenters2.obj', glCenters(size(glCenters, 1),:));
     
     teeth.vers = [];
     teeth.tris = [];

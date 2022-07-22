@@ -7,7 +7,6 @@ clear all;
 plot3(vers1(:, 1), vers1(:, 2), vers1(:, 3), '.');
  
 
-
 %% …Ë÷√‰÷»æ≤Œ ˝£∫
 shadingParams = {'FaceLighting','gouraud', 'FaceColor','interp'};
 
