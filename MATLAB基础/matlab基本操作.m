@@ -16,6 +16,7 @@ disp(x);
 disp(u);
 disp(v);
 
+
 %% 画图
 clc;
 clear all;
@@ -34,6 +35,14 @@ y1 = -0.1*(x1-40).^2 + 30;
 y2 = y1-30;
 scatter(x1, y1, 'r');                       % 画的点默认是空心圆；
 scatter(x1, y2, 'g', 'filled');             % filled指定画的点为实心圆；
+
+% surf()——画曲面：
+% meshgrid()
+[X,Y]=meshgrid(-2:0.1:2, -3: 0.1 :3);
+Z=exp(-X.^2-Y.^2);
+figure(2);
+surf(X,Y,Z);%表面图
+ 
 
 
 %% 读写.dat文件

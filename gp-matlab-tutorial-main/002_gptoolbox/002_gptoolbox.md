@@ -64,8 +64,9 @@ available [here](https://github.com/alecjacobson/gptoolbox/tree/master/mex).
 This document contains a very brief overview.
 
 As a first step, you have to make sure that both the
-[Boost libraries](https://www.boost.org) as well as [CMake](https://cmake.org)
+==[Boost libraries](https://www.boost.org)== as well as [CMake](https://cmake.org)
 are available on your operating system.
+
 * Many Linux distributions contain these in their public file repositories.
 * On macOS, these can be downloaded using [homebrew](https://brew.sh).
 * On Windows, dedicated installers are available on the respective websites

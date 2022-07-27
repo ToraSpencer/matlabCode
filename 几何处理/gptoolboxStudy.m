@@ -2,6 +2,7 @@
  clc;
  clear all;
 
+ 
 %% 斌杰的曲线平滑算法：
 clc;
 clear all;
@@ -37,12 +38,22 @@ writeOBJ('newTooth.obj', tooth.vertex, tooth.face);
 objWriteVertices('toothVers.obj', tooth.vertex);
  
 
+
 %% 生成基础图形：
+clc;
+clear all;
 cubeMesh = struct('vertex',[],'face',[]);
 
 %   cube()——生成立方体网格；
-[cubeMesh.vertex, cubeMesh.face] = cube(3, 4, 5);
+[cubeMesh.vertex, cubeMesh.face] = cube(3, 4, 5);           % 从(0,0,0)开始画，xyz坐标都大于等于0
 writeOBJ('cube.obj', cubeMesh.vertex, cubeMesh.face);
+
+%    interpolateToLine()——插值生成直线段点集——by Tora
+line = interpolateToline([0, 0, 0], [3, 4, 5], 0.5);
+objWriteVertices('line.obj', line);
+
+%    printAABB()——生成层次包围盒网格，写入到本地文件——by Tora
+printAABB('aabb.obj', [-4.65682888, -6.20851517, -5.11108398], [4.63390493, 4.79591894, 3.49578595]);
 
  
 %% 画图
@@ -65,9 +76,11 @@ figure(3);
 plot3(xline(:, 1), xline(:, 2), xline(:, 3), '*');
 
 
+
 %% MyCrustOpen()——输出点云，输出三角片——！！！貌似生成的三角片朝向混乱
 trimesh(MyCrustOpen(toothVers), toothVers(:, 1), toothVers(:, 2), toothVers(:, 3));
 writeOBJ('补三角片生成的tooth网格.obj', toothVers, MyCrustOpen(toothVers));
+
 
 
 %% 查洞、补洞
@@ -78,6 +91,62 @@ bdry =  detect_mesh_holes_and_boundary(tris);
 holeVersIdx = bdry{1,1};
 holeVers = vers(holeVersIdx, :);
 objWriteVertices('切割牙冠的洞.obj', holeVers);
+
+
+
+%% 三角网格的基本性质：
+clc;
+clear all;
+[vers, tris] = readOBJfast('data/spot_low_resolution.obj');
+writeOBJ('inputMesh.obj', vers, tris);
+versCount = size(vers, 1);
+trisCount = size(tris, 1);
+
+%                            确定合适的指示线长度：
+minX = min(vers(:, 1));
+maxX = max(vers(:, 1));
+minY = min(vers(:, 2));
+maxY = max(vers(:, 2));
+minZ = min(vers(:, 3));
+maxZ = max(vers(:, 3));
+lineLen = max([maxX - minX, maxY - minY, maxZ - minZ]);
+
+% barycenter()——计算三角网格每个三角片的重心：
+baryCenters = barycenter(vers, tris);
+
+% normals()——计算网格面片的法向
+normDirs = normals(vers, tris, 'UseSVD', 1);                % 未归一化；
+normDirs = normalizerow(normDirs);
+%                           画顶点法向指示线：
+startVers = baryCenters;
+endVers = startVers + normDirs * lineLen;
+lines = [];
+for i = 1: trisCount
+    currentLine = interpolateToline(startVers(i, :), endVers(i, :), lineLen/10);
+    lines = [lines; currentLine];
+end
+objWriteVertices('trisNormDirLines.obj', lines);
+objWriteVertices('firstTrisNormDirLine.obj', lines(1: floor(size(lines, 1)/trisCount), :));
+
+% per_vertex_normals()——求网格顶点法向：
+normDirs_ver = per_vertex_normals(vers, tris);
+%                       画顶点法向指示线：
+startVers = vers;
+endVers = startVers + normDirs_ver*lineLen;
+lines = [];
+for i = 1: versCount
+    currentLine = interpolateToline(startVers(i, :), endVers(i, :), lineLen/10);
+    lines = [lines; currentLine];
+end
+objWriteVertices('versNormDirLines.obj', lines);
+objWriteVertices('firstVersNormDirLine.obj', lines(1: floor(size(lines, 1)/versCount), :));
+
+
+
+
+%% 三角网格的基本性质：
+clc;
+clear all;
 
 
 %%

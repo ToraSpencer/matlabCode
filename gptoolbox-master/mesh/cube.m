@@ -1,4 +1,5 @@
 function [vers, tris, Q] = cube(x,y,z)
+ %  生成一个边长为1的立方体网格，xyz表示在三轴上网格分别被划分为几份；
   % CUBE Construct a mesh of the unit cube. 
   % Sides are ordered like sides of a die (one of many dice).
   % Inputs:

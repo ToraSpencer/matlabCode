@@ -1,9 +1,10 @@
-function [ N ] = normals(V,F,varargin)
+function [ normDirs ] = normals(vers, tris, varargin)
+    % 计算多边形网格的面片的法向（未归一化）；
+    
   % NORMALS Compute *unnormalized* normals per face
-  %
   % N = normals(V,F)
   % N = normals(V,F,'ParameterName',ParameterValue, ...)
-  %
+ 
   % Inputs:
   %  V  #V x 3 matrix of vertex coordinates
   %  F  #F x 3  matrix of indices of triangle corners
@@ -13,7 +14,7 @@ function [ N ] = normals(V,F,varargin)
   %    'UseSVD' followed by whether to use SVD, slow {false}
   % Output:
   %  N  #F x 3 list of face normals
-  %
+ 
   % Example:
   %   timeit(@() normalizerow(normals(UV,UF)))
   %   % faster unit normals
@@ -37,56 +38,59 @@ function [ N ] = normals(V,F,varargin)
     D = reshape(sum(sABC,2),shape);
   end
 
+  % 默认optional参数：
   stable = false;
   use_svd = false;
-  % default values
-  % Map of parameter names to variable names
+  
+  % 读取optional参数；
+  % default values, Map of parameter names to variable names
   params_to_variables = containers.Map( ...
     {'Stable','UseSVD'},{'stable','use_svd'});
   v = 1;
   while v <= numel(varargin)
     param_name = varargin{v};
-    if isKey(params_to_variables,param_name)
+    if isKey(params_to_variables, param_name)
       assert(v+1<=numel(varargin));
       v = v+1;
       % Trick: use feval on anonymous function to use assignin to this workspace
-      feval(@()assignin('caller',params_to_variables(param_name),varargin{v}));
+      feval(@()assignin('caller', params_to_variables(param_name), varargin{v}));
     else
       error('Unsupported parameter: %s',varargin{v});
     end
     v=v+1;
   end
 
-  if size(F,2)==2
-    N = V(F(:,2),:)-V(F(:,1),:);
-    N = N*[0 -1;1 0];
+  
+  if size(tris, 2) == 2
+    normDirs = vers(tris(:,2),:)-vers(tris(:,1),:);
+    normDirs = normDirs*[0 -1;1 0];
     return;
   end
   
-  p1 = V(F(:,1),:);
-  p2 = V(F(:,2),:);
-  p3 = V(F(:,3),:);
+  va = vers(tris(:,1),:);
+  vb = vers(tris(:,2),:);
+  vc = vers(tris(:,3),:);
   
-  if use_svd
-    N = zeros(size(F,1),3);
-    BC = barycenter(V,F);
-    for f = 1:size(F,1)
-      Uf = bsxfun(@minus,V(F(f,:),:),BC(f,:));
+  if use_svd                       % 'UseSVD', 1——使用SVD求面片法向；
+    normDirs = zeros(size(tris, 1),3);
+    BC = barycenter(vers, tris);
+    for k = 1:size(tris,1)
+      Uf = bsxfun(@minus, vers(tris(k,:),:), BC(k,:));
       [~,~,sV] = svd(Uf);
-      N(f,:) = sV(:,3);
+      normDirs(k,:) = sV(:,3);
     end
-    NN = normals(V,F,'UseSVD',false);
-    N(sum(N.*NN,2)<0,:) = N(sum(N.*NN,2)<0,:)*-1;
+    NN = normals(vers,tris,'UseSVD',false);
+    normDirs(sum(normDirs.*NN,2)<0,:) = normDirs(sum(normDirs.*NN,2)<0,:)*-1;
   else
-    % ,2 is necessary because this will produce the wrong result if there are
-    % exactly 3 faces
-    N1 = cross(p2 - p1, p3 - p1,2);
-    if stable
-      N2 = cross(p3 - p2, p1 - p2,2);
-      N3 = cross(p1 - p3, p2 - p3,2);
-      N = sum3(N1,N2,N3)/3;
+    % 无optional参数
+    N1 = cross(vb - va, vc - va, 2);        % 2 is necessary because this will produce the wrong result if there are exactly 3 faces
+    
+    if stable         % 'Stable', 1
+      N2 = cross(vc - vb, va - vb, 2);
+      N3 = cross(va - vc, vb - vc, 2);
+      normDirs = sum3(N1,N2,N3)/3;
     else
-      N = N1;
+      normDirs = N1;
     end
   end
 

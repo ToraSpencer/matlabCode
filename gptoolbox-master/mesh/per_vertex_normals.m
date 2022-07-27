@@ -1,4 +1,5 @@
 function N = per_vertex_normals(V,F,varargin)
+    % 求网格顶点的法向；
   % PER_VERTEX_NORMALS  Compute per-vertex (area-weighted) normals over a mesh % (V,F)
   %
   % N = per_vertex_normals(V,F)
