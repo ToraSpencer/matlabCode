@@ -7,11 +7,12 @@ name = 'inputData/model2';
 [vers, tris] = readOBJfast([name, '.obj']);
 writeOBJ('inputMesh.obj', vers, tris);
 
-%% 调用SDFGen程序生成符号距离场
+%% 调用SDFGen程序生成符号距离场 
 tic
 command = ['SDFGen.exe', ' ', name, '.obj', ' ', '1.0 3'];
 [status, result] = system( command );
 fprintf('SDF calculation takes %f s time.\n', toc);
+
 
 %% 提取SDFGen结果数据
 sdfHandle = fopen([name, '.sdf']);              % SDFGen输出数据文件的句柄；
